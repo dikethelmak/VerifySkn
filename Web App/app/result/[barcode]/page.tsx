@@ -120,7 +120,7 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
         {product && <ProductCard product={product} barcode={barcode} />}
 
         {/* Advisory */}
-        {showAdvisory && <AdvisoryBlock verdict={verdict} />}
+        {showAdvisory && <AdvisoryBlock verdict={verdict as "unverified" | "suspicious"} />}
 
         {/* Inline image upload for unverified — hidden once combined result is present */}
         {!combinedResult && verdict === "unverified" && (

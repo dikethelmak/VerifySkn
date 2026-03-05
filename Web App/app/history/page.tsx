@@ -5,7 +5,7 @@ import {
   getProductIdsWithCombinedResults,
 } from "@/lib/supabase";
 import { HistoryFilters, type HistoryRow } from "@/components/HistoryFilters";
-import type { ScanVerdict } from "@/lib/database.types";
+import type { ScanLog, ScanVerdict } from "@/lib/database.types";
 
 export const metadata: Metadata = {
   title: "Scan History — VerifySkn",
@@ -23,11 +23,13 @@ export default async function HistoryPage({ searchParams }: PageProps) {
 
   const supabase = createSupabaseServerClient();
 
-  const { data: rawLogs, count } = await supabase
+  type RawScanLog = ScanLog & { product: { name: string; brand: string } | null };
+  const { data: rawData, count } = await supabase
     .from("scan_logs")
     .select("*, product:products(name, brand)", { count: "exact" })
     .order("scanned_at", { ascending: false })
     .range(offset, offset + PER_PAGE - 1);
+  const rawLogs = rawData as RawScanLog[] | null;
 
   const totalPages = Math.ceil((count ?? 0) / PER_PAGE);
 

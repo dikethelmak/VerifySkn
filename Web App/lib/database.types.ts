@@ -10,6 +10,9 @@ export type Json =
   | Json[];
 
 export interface Database {
+  __InternalSupabase: {
+    PostgrestVersion: "12";
+  };
   public: {
     Tables: {
       products: {
@@ -52,12 +55,14 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       scan_logs: {
         Row: {
           id: string;
           barcode_scanned: string;
           product_id: string | null;
+          user_id: string | null;
           result: ScanVerdict;
           confidence_score: number;
           user_agent: string | null;
@@ -67,6 +72,7 @@ export interface Database {
           id?: string;
           barcode_scanned: string;
           product_id?: string | null;
+          user_id?: string | null;
           result: ScanVerdict;
           confidence_score: number;
           user_agent?: string | null;
@@ -76,11 +82,21 @@ export interface Database {
           id?: string;
           barcode_scanned?: string;
           product_id?: string | null;
+          user_id?: string | null;
           result?: ScanVerdict;
           confidence_score?: number;
           user_agent?: string | null;
           scanned_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "scan_logs_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       brands: {
         Row: {
@@ -104,6 +120,7 @@ export interface Database {
           website?: string | null;
           logo_url?: string | null;
         };
+        Relationships: [];
       };
       image_analyses: {
         Row: {
@@ -154,6 +171,148 @@ export interface Database {
           hologram_check?: string;
           analysed_at?: string;
         };
+        Relationships: [];
+      };
+      brand_submissions: {
+        Row: {
+          id: string;
+          submitted_by: string;
+          brand_id: string;
+          product_name: string;
+          barcode: string;
+          category: string;
+          size_ml: number | null;
+          authenticated_retailers: string[];
+          packaging_notes: string;
+          status: "pending" | "approved" | "rejected";
+          admin_notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          submitted_by: string;
+          brand_id: string;
+          product_name: string;
+          barcode: string;
+          category: string;
+          size_ml?: number | null;
+          authenticated_retailers?: string[];
+          packaging_notes?: string;
+          status?: "pending" | "approved" | "rejected";
+          admin_notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          submitted_by?: string;
+          brand_id?: string;
+          product_name?: string;
+          barcode?: string;
+          category?: string;
+          size_ml?: number | null;
+          authenticated_retailers?: string[];
+          packaging_notes?: string;
+          status?: "pending" | "approved" | "rejected";
+          admin_notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      reports: {
+        Row: {
+          id: string;
+          reporter_id: string | null;
+          barcode: string;
+          product_id: string | null;
+          report_type: "counterfeit" | "mislabelled" | "wrong_info" | "other";
+          purchase_location: string;
+          purchase_country: string;
+          description: string;
+          image_urls: string[];
+          status: "pending" | "reviewed" | "confirmed" | "dismissed";
+          admin_notes: string | null;
+          upvotes: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          reporter_id?: string | null;
+          barcode: string;
+          product_id?: string | null;
+          report_type: "counterfeit" | "mislabelled" | "wrong_info" | "other";
+          purchase_location: string;
+          purchase_country: string;
+          description: string;
+          image_urls?: string[];
+          status?: "pending" | "reviewed" | "confirmed" | "dismissed";
+          admin_notes?: string | null;
+          upvotes?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          reporter_id?: string | null;
+          barcode?: string;
+          product_id?: string | null;
+          report_type?: "counterfeit" | "mislabelled" | "wrong_info" | "other";
+          purchase_location?: string;
+          purchase_country?: string;
+          description?: string;
+          image_urls?: string[];
+          status?: "pending" | "reviewed" | "confirmed" | "dismissed";
+          admin_notes?: string | null;
+          upvotes?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      report_upvotes: {
+        Row: {
+          id: string;
+          report_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          report_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          report_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      profiles: {
+        Row: {
+          id: string;
+          full_name: string | null;
+          role: "user" | "brand_rep" | "admin";
+          verified_brand_id: string | null;
+          scan_count: number;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          full_name?: string | null;
+          role?: "user" | "brand_rep" | "admin";
+          verified_brand_id?: string | null;
+          scan_count?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          full_name?: string | null;
+          role?: "user" | "brand_rep" | "admin";
+          verified_brand_id?: string | null;
+          scan_count?: number;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       combined_results: {
         Row: {
@@ -192,11 +351,13 @@ export interface Database {
           product_id?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
     Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
 
@@ -220,6 +381,17 @@ export type CombinedResult =
   Database["public"]["Tables"]["combined_results"]["Row"];
 export type CombinedResultInsert =
   Database["public"]["Tables"]["combined_results"]["Insert"];
+
+export type BrandSubmission       = Database["public"]["Tables"]["brand_submissions"]["Row"];
+export type BrandSubmissionInsert = Database["public"]["Tables"]["brand_submissions"]["Insert"];
+
+export type Report         = Database["public"]["Tables"]["reports"]["Row"];
+export type ReportInsert   = Database["public"]["Tables"]["reports"]["Insert"];
+export type ReportUpvote   = Database["public"]["Tables"]["report_upvotes"]["Row"];
+
+export type Profile       = Database["public"]["Tables"]["profiles"]["Row"];
+export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
+export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 export interface DashboardStats {
   totalProducts: number;

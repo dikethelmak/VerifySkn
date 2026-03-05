@@ -254,7 +254,7 @@ export function InlineImageAnalysis({ barcode, sessionId }: Props) {
               Help the community
             </p>
             <p className="mt-1 font-rethink text-sm text-text-secondary">
-              Upload a photo to get a deeper analysis of this product's packaging.
+              Upload a photo to get a deeper analysis of this product&apos;s packaging.
             </p>
           </motion.div>
         )}
