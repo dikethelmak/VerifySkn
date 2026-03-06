@@ -5,18 +5,21 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://verifyskn.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Public client — no cookies needed for product data
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  let products: { barcode: string; updated_at: string }[] = [];
 
-  const { data: products } = await supabase
-    .from("products")
-    .select("barcode, updated_at")
-    .order("updated_at", { ascending: false });
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const productUrls: MetadataRoute.Sitemap = (products ?? []).map((p) => ({
+  if (supabaseUrl && supabaseKey) {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data } = await supabase
+      .from("products")
+      .select("barcode, updated_at")
+      .order("updated_at", { ascending: false });
+    products = data ?? [];
+  }
+
+  const productUrls: MetadataRoute.Sitemap = products.map((p) => ({
     url: `${BASE_URL}/result/${encodeURIComponent(p.barcode)}`,
     lastModified: new Date(p.updated_at),
     changeFrequency: "weekly",
