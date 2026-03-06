@@ -2,11 +2,38 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, X } from "lucide-react";
-import { Scanner } from "@/components/Scanner";
-import { ImageUploader } from "@/components/ImageUploader";
 import { AnalysisLoader } from "@/components/AnalysisLoader";
+
+// Lazy-load camera-heavy components — avoids bundling them in the initial JS
+const Scanner = dynamic(
+  () => import("@/components/Scanner").then((m) => ({ default: m.Scanner })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-64 animate-pulse items-center justify-center rounded-2xl border border-border bg-surface">
+        <div className="h-12 w-12 rounded-full bg-border" />
+      </div>
+    ),
+  }
+);
+
+const ImageUploader = dynamic(
+  () =>
+    import("@/components/ImageUploader").then((m) => ({
+      default: m.ImageUploader,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-52 animate-pulse items-center justify-center rounded-2xl border-2 border-dashed border-border bg-surface">
+        <div className="h-8 w-8 rounded-full bg-border" />
+      </div>
+    ),
+  }
+);
 import { cn } from "@/lib/utils";
 import {
   BARCODE_SESSION_KEY,

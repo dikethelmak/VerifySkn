@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import {
+  createSupabaseServerClient,
   saveImageAnalysis,
   saveCombinedResult,
   getProductByBarcode,
@@ -12,6 +13,9 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const VALID_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 type SupportedMime = (typeof VALID_MIME_TYPES)[number];
+
+// ~4 MB image cap (base64 is ~33% larger than raw bytes, so this ≈ 3 MB image)
+const MAX_BASE64_BYTES = 4 * 1024 * 1024;
 
 interface RequestBody {
   base64: string;
@@ -33,6 +37,13 @@ function clampInt(value: unknown, fallback: number): number {
 }
 
 export async function POST(req: NextRequest) {
+  // ── Auth gate ─────────────────────────────────────────────
+  const supabase = createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  }
+
   let body: RequestBody;
 
   try {
@@ -45,6 +56,10 @@ export async function POST(req: NextRequest) {
 
   if (!base64 || !mimeType) {
     return NextResponse.json({ error: "Missing base64 or mimeType" }, { status: 400 });
+  }
+
+  if (base64.length > MAX_BASE64_BYTES) {
+    return NextResponse.json({ error: "Image too large. Maximum size is 4 MB." }, { status: 413 });
   }
 
   if (!VALID_MIME_TYPES.includes(mimeType as SupportedMime)) {

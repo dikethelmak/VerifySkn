@@ -10,8 +10,18 @@ import type { ScanVerdict } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "VerifySkn — Know What's On Your Skin",
+  title: "VerifySkn — Scan Skincare Products for Authenticity",
+  description:
+    "Instantly verify skincare product authenticity. Scan any barcode and our AI cross-references it against our verified database in seconds.",
+  openGraph: {
+    title: "VerifySkn — Scan Skincare Products for Authenticity",
+    description:
+      "Instantly verify skincare product authenticity. Scan any barcode and our AI cross-references it against our verified database in seconds.",
+  },
 };
+
+// ISR — revalidate home-page stats every hour
+export const revalidate = 3600;
 
 export default async function HomePage() {
   const [stats, recentScans] = await Promise.all([
