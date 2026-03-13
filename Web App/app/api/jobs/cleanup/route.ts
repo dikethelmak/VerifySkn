@@ -1,15 +1,16 @@
+import { timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import type { ScanLog } from '@/lib/database.types'
 
 function verifyCronSecret(request: NextRequest): boolean {
   const secret = request.headers.get('x-cron-secret')
   const expected = process.env.CRON_SECRET
   if (!secret || !expected) return false
-  // Timing-safe comparison to prevent timing attacks
   const a = Buffer.from(secret)
   const b = Buffer.from(expected)
   if (a.length !== b.length) return false
-  return crypto.timingSafeEqual(a, b)
+  return timingSafeEqual(a, b)
 }
 
 export async function POST(request: NextRequest) {
@@ -52,12 +53,14 @@ export async function POST(request: NextRequest) {
   stats.social_unprocessed_deleted = unprocessedDeleted ?? 0
 
   // 3. Archive scan_logs older than 6 months, then delete
-  const { data: oldLogs } = await supabase
+  const { data: rawOldLogs } = await supabase
     .from('scan_logs')
     .select('*')
     .lt('scanned_at', sixMonthsAgo)
 
-  if (oldLogs && oldLogs.length > 0) {
+  const oldLogs = (rawOldLogs ?? []) as ScanLog[]
+
+  if (oldLogs.length > 0) {
     const { error: archiveError } = await supabase
       .from('scan_logs_archive')
       .insert(oldLogs.map((row) => ({ ...row, archived_at: now.toISOString() })))

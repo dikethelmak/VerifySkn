@@ -25,7 +25,7 @@ export async function GET(
 
   if (obfProduct) {
     // Fix 6: upsert instead of insert so duplicate barcodes don't fail silently
-    supabase
+    void supabase
       .from('products')
       .upsert(
         {
@@ -41,8 +41,6 @@ export async function GET(
         },
         { onConflict: 'barcode' }
       )
-      .then(() => {})
-      .catch((err: unknown) => console.error('[product/barcode] OBF cache upsert failed:', err))
 
     return NextResponse.json({ ...obfProduct, source: 'open_beauty_facts', verified: false })
   }

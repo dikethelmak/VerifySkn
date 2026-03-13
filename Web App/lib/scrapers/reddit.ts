@@ -48,7 +48,6 @@ export const redditScraper: ScraperAdapter = {
           query,
           sort: 'top',
           time: 'year',
-          limit: 10,
         })
 
         for (const post of results) {

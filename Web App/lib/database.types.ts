@@ -298,7 +298,15 @@ export interface Database {
           user_id?: string;
           created_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "report_upvotes_report_id_fkey";
+            columns: ["report_id"];
+            isOneToOne: false;
+            referencedRelation: "reports";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       profiles: {
         Row: {
@@ -360,6 +368,123 @@ export interface Database {
         };
         Relationships: [];
       };
+      scan_logs_archive: {
+        Row: {
+          id: string;
+          barcode_scanned: string;
+          product_id: string | null;
+          user_id: string | null;
+          result: ScanVerdict;
+          confidence_score: number;
+          user_agent: string | null;
+          scanned_at: string;
+          archived_at: string;
+        };
+        Insert: {
+          id?: string;
+          barcode_scanned: string;
+          product_id?: string | null;
+          user_id?: string | null;
+          result: ScanVerdict;
+          confidence_score: number;
+          user_agent?: string | null;
+          scanned_at?: string;
+          archived_at: string;
+        };
+        Update: {
+          id?: string;
+          barcode_scanned?: string;
+          product_id?: string | null;
+          user_id?: string | null;
+          result?: ScanVerdict;
+          confidence_score?: number;
+          user_agent?: string | null;
+          scanned_at?: string;
+          archived_at?: string;
+        };
+        Relationships: [];
+      };
+      scrape_jobs: {
+        Row: {
+          id: string;
+          job_type: string;
+          status: string;
+          started_at: string;
+          completed_at: string | null;
+          metadata: Json;
+        };
+        Insert: {
+          id: string;
+          job_type: string;
+          status: string;
+          started_at: string;
+          completed_at?: string | null;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          job_type?: string;
+          status?: string;
+          started_at?: string;
+          completed_at?: string | null;
+          metadata?: Json;
+        };
+        Relationships: [];
+      };
+      scrape_job_checkpoints: {
+        Row: {
+          job_id: string;
+          completed_brands: string[];
+        };
+        Insert: {
+          job_id: string;
+          completed_brands?: string[];
+        };
+        Update: {
+          job_id?: string;
+          completed_brands?: string[];
+        };
+        Relationships: [];
+      };
+      social_intelligence_cache: {
+        Row: {
+          id: string;
+          brand: string;
+          platform: string;
+          post_url: string;
+          content: string;
+          image_urls: string[];
+          engagement_score: number | null;
+          posted_at: string | null;
+          processed: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          brand: string;
+          platform: string;
+          post_url: string;
+          content: string;
+          image_urls?: string[];
+          engagement_score?: number | null;
+          posted_at?: string | null;
+          processed?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          brand?: string;
+          platform?: string;
+          post_url?: string;
+          content?: string;
+          image_urls?: string[];
+          engagement_score?: number | null;
+          posted_at?: string | null;
+          processed?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       combined_results: {
         Row: {
           id: string;
@@ -401,7 +526,16 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      increment_vision_counter: {
+        Args: { p_date: string };
+        Returns: number;
+      };
+      get_admin_users: {
+        Args: Record<string, never>;
+        Returns: { id: string; email: string; full_name: string | null; role: string }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

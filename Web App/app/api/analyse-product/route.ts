@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
           barcodeResult, barcodeConfidence,
           imageResult: cached.result, imageConfidence: cached.confidence,
         })
-        supabase.from('combined_results').insert({
+        void supabase.from('combined_results').insert({
           session_id:         sessionId,
           barcode_result:     barcodeResult,
           barcode_confidence: barcodeConfidence,
@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
           final_result:       combined.finalResult,
           final_confidence:   combined.finalConfidence,
           product_id:         productId,
-        }).catch(() => {})
+        })
       }
 
       return NextResponse.json({ ...cached, sessionId, fromCache: true })
@@ -324,7 +324,7 @@ export async function POST(request: NextRequest) {
         barcodeResult, barcodeConfidence,
         imageResult: analysis.result, imageConfidence: analysis.confidence,
       })
-      supabase.from('combined_results').insert({
+      void supabase.from('combined_results').insert({
         session_id:         sessionId,
         barcode_result:     barcodeResult,
         barcode_confidence: barcodeConfidence,
@@ -333,7 +333,7 @@ export async function POST(request: NextRequest) {
         final_result:       combined.finalResult,
         final_confidence:   combined.finalConfidence,
         product_id:         productId,
-      }).catch(() => {})
+      })
     }
 
     return NextResponse.json({ ...analysis, sessionId, fromCache: false })

@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { runScrapers } from '@/lib/scrapers/job-runner'
@@ -12,7 +13,7 @@ function verifyCronSecret(request: NextRequest): boolean {
   const a = Buffer.from(secret)
   const b = Buffer.from(expected)
   if (a.length !== b.length) return false
-  return crypto.timingSafeEqual(a, b)
+  return timingSafeEqual(a, b)
 }
 
 export async function POST(request: NextRequest) {
