@@ -124,7 +124,9 @@ export default function LoginPage() {
       return;
     }
 
-    const next_ = searchParams.get("next") ?? "/dashboard";
+    const raw   = searchParams.get("next") ?? "";
+    // Only allow same-origin relative paths — reject absolute URLs and protocol-relative URLs
+    const next_ = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
     router.push(next_);
     router.refresh();
   }

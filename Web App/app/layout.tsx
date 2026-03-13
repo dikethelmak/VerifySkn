@@ -25,9 +25,26 @@ const spaceMono = Space_Mono({
   display: "swap",
 });
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://verifyskn.com";
+
 export const metadata: Metadata = {
-  title: "VerifySkn",
-  description: "Verify the authenticity of your skin care products.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "VerifySkn — Scan Skincare for Authenticity",
+    template: "%s — VerifySkn",
+  },
+  description:
+    "Instantly verify skincare product authenticity. Scan any barcode — we cross-reference it against our verified database and AI-analyse the result in seconds.",
+  openGraph: {
+    siteName: "VerifySkn",
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "VerifySkn" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/opengraph-image"],
+  },
 };
 
 export default function RootLayout({

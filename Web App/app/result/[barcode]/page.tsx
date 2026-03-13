@@ -59,10 +59,19 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const barcode = decodeURIComponent(params.barcode);
   const product = await getProductByBarcode(barcode);
+
+  const title = product
+    ? `${product.name} by ${product.brand}`
+    : `Scan Result: ${barcode}`;
+
+  const description = product
+    ? `Verify the authenticity of ${product.name} by ${product.brand}. Check if your product is genuine with VerifySkn's AI-powered scanner.`
+    : `Check the authenticity of barcode ${barcode} with VerifySkn's AI-powered skincare verification system.`;
+
   return {
-    title: product
-      ? `${product.name} — VerifySkn`
-      : `Scan Result ${barcode} — VerifySkn`,
+    title,
+    description,
+    openGraph: { title, description },
   };
 }
 

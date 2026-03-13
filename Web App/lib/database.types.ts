@@ -314,6 +314,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          id:         string;
+          user_id:    string;
+          type:       "report_update" | "upvote" | "product_verified" | "submission_approved" | "admin_alert";
+          title:      string;
+          message:    string;
+          read:       boolean;
+          link:       string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?:         string;
+          user_id:     string;
+          type:        "report_update" | "upvote" | "product_verified" | "submission_approved" | "admin_alert";
+          title:       string;
+          message:     string;
+          read?:       boolean;
+          link?:       string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?:         string;
+          user_id?:    string;
+          type?:       "report_update" | "upvote" | "product_verified" | "submission_approved" | "admin_alert";
+          title?:      string;
+          message?:    string;
+          read?:       boolean;
+          link?:       string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       combined_results: {
         Row: {
           id: string;
@@ -392,6 +425,8 @@ export type ReportUpvote   = Database["public"]["Tables"]["report_upvotes"]["Row
 export type Profile       = Database["public"]["Tables"]["profiles"]["Row"];
 export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+
+export type AppNotification = Database["public"]["Tables"]["notifications"]["Row"];
 
 export interface DashboardStats {
   totalProducts: number;

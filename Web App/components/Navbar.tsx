@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "./NotificationBell";
 
 const NAV_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Scan", href: "/scan" },
+  { label: "Home",    href: "/" },
+  { label: "Scan",    href: "/scan" },
   { label: "History", href: "/history" },
+  { label: "About",   href: "/about" },
 ] as const;
 
 export function Navbar() {
@@ -66,13 +68,17 @@ export function Navbar() {
           })}
         </ul>
 
-        {/* ── Hamburger (mobile) ── */}
-        <button
-          onClick={() => setIsOpen((o) => !o)}
-          aria-label={isOpen ? "Close menu" : "Open menu"}
-          aria-expanded={isOpen}
-          className="flex h-9 w-9 flex-col items-center justify-center gap-[5px] rounded-md md:hidden"
-        >
+        {/* ── Right-side controls ── */}
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+
+          {/* Hamburger (mobile only) */}
+          <button
+            onClick={() => setIsOpen((o) => !o)}
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isOpen}
+            className="flex h-9 w-9 flex-col items-center justify-center gap-[5px] rounded-md md:hidden"
+          >
           <motion.span
             animate={isOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
             transition={{ duration: 0.2 }}
@@ -88,7 +94,8 @@ export function Navbar() {
             transition={{ duration: 0.2 }}
             className="block h-[2px] w-5 origin-center rounded-full bg-text-primary"
           />
-        </button>
+          </button>
+        </div>
       </nav>
 
       {/* ── Mobile dropdown ── */}
