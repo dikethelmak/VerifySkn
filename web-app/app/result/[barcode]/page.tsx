@@ -9,6 +9,11 @@ import {
   logScan,
 } from "@/lib/supabase";
 import type { Product, ScanVerdict } from "@/lib/database.types";
+import {
+  lookupExternalProduct,
+  externalSourceLabel,
+  type ExternalProduct,
+} from "@/lib/external-product-lookup";
 import { ResultHero } from "@/components/ResultHero";
 import { ClaudeAnalysis, AnalysisSkeleton } from "@/components/ClaudeAnalysis";
 import { InlineImageAnalysis } from "@/components/InlineImageAnalysis";
@@ -85,6 +90,9 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
     sessionId ? getCombinedResultBySession(sessionId) : Promise.resolve(null),
   ]);
 
+  // If not in our verified DB, try external sources (OBF → Barcode Lookup → UPCitemdb)
+  const externalProduct = !product ? await lookupExternalProduct(barcode) : null;
+
   // Combined result takes priority over barcode-only verdict
   let verdict: ScanVerdict;
   let confidence: number;
@@ -125,8 +133,13 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
           />
         )}
 
-        {/* Product card */}
+        {/* Product card — verified DB hit */}
         {product && <ProductCard product={product} barcode={barcode} />}
+
+        {/* External product card — found via OBF / Barcode Lookup / UPCitemdb */}
+        {!product && externalProduct && (
+          <ExternalProductCard product={externalProduct} barcode={barcode} />
+        )}
 
         {/* Advisory */}
         {showAdvisory && <AdvisoryBlock verdict={verdict as "unverified" | "suspicious"} />}
@@ -247,6 +260,54 @@ function ProductCard({ product, barcode }: { product: Product; barcode: string }
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── External product card ─────────────────────────────────────
+
+function ExternalProductCard({
+  product,
+  barcode,
+}: {
+  product: ExternalProduct;
+  barcode: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+      {/* Source badge */}
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 font-rethink text-xs text-text-secondary">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+          <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" />
+          <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        </svg>
+        Found via {externalSourceLabel(product.source)}
+      </span>
+
+      {product.brand && (
+        <p className="mt-3 font-fraunces text-2xl font-semibold text-primary">
+          {product.brand}
+        </p>
+      )}
+      <h2 className="mt-1 font-rethink text-lg font-semibold text-text-primary">
+        {product.name}
+      </h2>
+
+      {product.category && (
+        <div className="mt-4">
+          <span className="rounded-full bg-primary/10 px-3 py-1 font-rethink text-xs font-medium capitalize text-primary">
+            {product.category}
+          </span>
+        </div>
+      )}
+
+      <p className="mt-5 font-mono text-sm tracking-wide text-text-secondary">
+        {barcode}
+      </p>
+
+      <p className="mt-4 font-rethink text-xs leading-relaxed text-text-secondary">
+        This product was identified in an external database but is not yet in our verified records. The barcode format is valid — this is likely a genuine product we have not assessed yet.
+      </p>
     </div>
   );
 }

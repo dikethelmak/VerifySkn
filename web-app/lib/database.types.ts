@@ -609,6 +609,10 @@ export interface Database {
         Args: { p_date: string };
         Returns: number;
       };
+      increment_api_counter: {
+        Args: { p_service: string; p_date: string };
+        Returns: number;
+      };
       get_admin_users: {
         Args: Record<string, never>;
         Returns: { id: string; email: string; full_name: string | null; role: string }[];
