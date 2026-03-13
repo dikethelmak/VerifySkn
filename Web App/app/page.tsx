@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Barcode, Camera } from "lucide-react";
 import {
-  getDashboardStats,
   getRecentScans,
   getProductIdsWithCombinedResults,
 } from "@/lib/supabase";
@@ -20,25 +19,17 @@ export const metadata: Metadata = {
   },
 };
 
-// ISR — revalidate home-page stats every hour
-export const revalidate = 3600;
+// No cache — always fetch fresh stats on each request
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [stats, recentScans] = await Promise.all([
-    getDashboardStats(),
-    getRecentScans(5),
-  ]);
+  const recentScans = await getRecentScans(5);
 
   // Determine which recent scans have an associated image analysis
   const productIds = recentScans
     .map((s) => s.product_id)
     .filter((id): id is string => id !== null);
   const combinedProductIds = await getProductIdsWithCombinedResults(productIds);
-
-  const authenticRate =
-    stats.totalScans > 0
-      ? Math.round((stats.breakdown.authentic / stats.totalScans) * 100)
-      : 0;
 
   return (
     <main>
@@ -61,16 +52,6 @@ export default async function HomePage() {
             <ScanIcon className="h-5 w-5" />
             Scan a Product
           </Link>
-        </div>
-      </section>
-
-      {/* ── Stats — 2 × 2 on mobile, 4 columns on sm+ ── */}
-      <section className="border-b border-border bg-surface px-6 py-12">
-        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 sm:grid-cols-4">
-          <StatCard value={stats.totalProducts}         label="Products in Database" />
-          <StatCard value={stats.totalScans}            label="Total Scans" />
-          <StatCard value={stats.totalImageAnalyses}    label="Images Analysed" />
-          <StatCard value={`${authenticRate}%`}         label="Authentic Rate" />
         </div>
       </section>
 
@@ -201,15 +182,6 @@ export default async function HomePage() {
 }
 
 // ── Sub-components ───────────────────────────────────────────
-
-function StatCard({ value, label }: { value: number | string; label: string }) {
-  return (
-    <div className="text-center">
-      <p className="font-fraunces text-4xl font-semibold text-primary">{value}</p>
-      <p className="mt-1 font-rethink text-sm text-text-secondary">{label}</p>
-    </div>
-  );
-}
 
 function Step({
   number,

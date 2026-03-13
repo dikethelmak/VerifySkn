@@ -138,6 +138,11 @@ export interface Database {
           spelling_check: string;
           hologram_check: string;
           analysed_at: string;
+          // Added by risk_mitigation_tables.sql
+          session_id: string | null;
+          cache_key: string | null;
+          provider: string | null;
+          packaging_checks: Json | null;
         };
         Insert: {
           id?: string;
@@ -154,6 +159,10 @@ export interface Database {
           spelling_check?: string;
           hologram_check?: string;
           analysed_at?: string;
+          session_id?: string | null;
+          cache_key?: string | null;
+          provider?: string | null;
+          packaging_checks?: Json | null;
         };
         Update: {
           id?: string;
@@ -170,6 +179,10 @@ export interface Database {
           spelling_check?: string;
           hologram_check?: string;
           analysed_at?: string;
+          session_id?: string | null;
+          cache_key?: string | null;
+          provider?: string | null;
+          packaging_checks?: Json | null;
         };
         Relationships: [];
       };

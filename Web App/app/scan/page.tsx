@@ -6,8 +6,15 @@ import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, X } from "lucide-react";
 import { AnalysisLoader } from "@/components/AnalysisLoader";
+import { cn } from "@/lib/utils";
+import {
+  BARCODE_SESSION_KEY,
+  IMAGE_SESSION_KEY,
+  type BarcodeSession,
+  type ImageAnalysisSession,
+} from "@/lib/imageSession";
 
-// Lazy-load camera-heavy components — avoids bundling them in the initial JS
+// Lazy-load camera-heavy components
 const Scanner = dynamic(
   () => import("@/components/Scanner").then((m) => ({ default: m.Scanner })),
   {
@@ -34,13 +41,6 @@ const ImageUploader = dynamic(
     ),
   }
 );
-import { cn } from "@/lib/utils";
-import {
-  BARCODE_SESSION_KEY,
-  IMAGE_SESSION_KEY,
-  type BarcodeSession,
-  type ImageAnalysisSession,
-} from "@/lib/imageSession";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -66,14 +66,12 @@ export default function ScanPage() {
   // Image tab
   const [uploadPhase, setUploadPhase] = useState<UploadPhase>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  // Holds the last image data so AnalysisLoader can stay visible while we wait
   const pendingRef = useRef<{ base64: string; mimeType: string } | null>(null);
 
   // Barcode session banner
   const [barcodeSession, setBarcodeSession] = useState<BarcodeSession | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
-  // Read barcode session from sessionStorage (written by handleScan below)
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(BARCODE_SESSION_KEY);
@@ -103,54 +101,56 @@ export default function ScanPage() {
       setUploadPhase("analyzing");
       setErrorMessage(null);
 
-      const sessionId = barcodeSession?.sessionId ?? crypto.randomUUID();
-
       try {
         const res = await fetch("/api/analyse-product", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            base64,
+            image:     base64,
             mimeType,
-            sessionId,
-            barcode: barcodeSession?.barcode ?? undefined,
+            barcode:   barcodeSession?.barcode   ?? undefined,
+            // Fix 3: pass the barcode sessionId so image + barcode results are linked
+            sessionId: barcodeSession?.sessionId ?? undefined,
           }),
         });
 
         if (!res.ok) {
-          throw new Error(`Server responded with ${res.status}`);
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error ?? `Server responded with ${res.status}`);
         }
 
         const data = await res.json();
 
-        const session: ImageAnalysisSession = {
-          result: data.result,
-          confidence: data.confidence,
-          summary: data.summary ?? "",
-          flags: data.flags ?? [],
-          font_quality: data.font_quality ?? "",
-          logo_accuracy: data.logo_accuracy ?? "",
-          print_quality: data.print_quality ?? "",
-          label_alignment: data.label_alignment ?? "",
-          spelling_check: data.spelling_check ?? "",
-          hologram_check: data.hologram_check ?? "",
-          sessionId,
-          ...(data.barcodeResult
-            ? {
-                barcodeResult: data.barcodeResult,
-                barcodeConfidence: data.barcodeConfidence,
-                finalResult: data.finalResult,
-                finalConfidence: data.finalConfidence,
-              }
-            : {}),
-        };
+        // Store result in sessionStorage as fallback for when Supabase is unavailable
+        try {
+          const session: ImageAnalysisSession = {
+            result:          data.result,
+            confidence:      data.confidence,
+            summary:         data.summary ?? "",
+            flags:           data.flags ?? [],
+            font_quality:    data.packaging_checks?.font_quality    ?? "",
+            logo_accuracy:   data.packaging_checks?.logo_accuracy   ?? "",
+            print_quality:   data.packaging_checks?.print_quality   ?? "",
+            label_alignment: data.packaging_checks?.label_alignment ?? "",
+            spelling_check:  data.packaging_checks?.spelling        ?? "",
+            hologram_check:  data.packaging_checks?.hologram        ?? "",
+            sessionId:       data.sessionId,
+          };
+          sessionStorage.setItem(IMAGE_SESSION_KEY, JSON.stringify(session));
+        } catch {
+          // sessionStorage unavailable — result page will rely on Supabase
+        }
 
-        sessionStorage.setItem(IMAGE_SESSION_KEY, JSON.stringify(session));
-        router.push("/result/image");
+        // Navigate using the session_id returned by the API
+        router.push(`/result/image?session=${data.sessionId}`);
       } catch (err) {
         console.error("[ScanPage] analyse-product failed:", err);
         setUploadPhase("error");
-        setErrorMessage("Analysis failed — please try again with a clearer photo.");
+        setErrorMessage(
+          err instanceof Error
+            ? err.message
+            : "Analysis failed — please try again with a clearer photo."
+        );
       }
     },
     [barcodeSession, router]
@@ -170,8 +170,6 @@ export default function ScanPage() {
     pendingRef.current = null;
   }, []);
 
-  // AnalysisLoader safety-net — all steps displayed but API not done yet.
-  // Navigation happens when the fetch resolves, so nothing to do here.
   const handleLoaderComplete = useCallback(() => {}, []);
 
   const showBanner =
@@ -239,7 +237,6 @@ export default function ScanPage() {
               onClick={() => setActiveTab(tab.id)}
               className="relative flex-1 py-2 px-4 font-rethink text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
             >
-              {/* Sliding white pill */}
               {activeTab === tab.id && (
                 <motion.div
                   layoutId="scan-tab-indicator"
@@ -266,7 +263,6 @@ export default function ScanPage() {
       {/* ── Tab content ── */}
       <div className="mt-8">
         <AnimatePresence mode="wait">
-          {/* Scan Barcode */}
           {activeTab === "barcode" && (
             <motion.div
               key="barcode-tab"
@@ -279,7 +275,6 @@ export default function ScanPage() {
             </motion.div>
           )}
 
-          {/* Analyse Packaging */}
           {activeTab === "image" && (
             <motion.div
               key="image-tab"
@@ -289,17 +284,14 @@ export default function ScanPage() {
               transition={{ duration: 0.18, ease: "easeOut" }}
               className="flex flex-col gap-4"
             >
-              {/* Idle — uploader */}
               {uploadPhase === "idle" && (
                 <ImageUploader onImageReady={handleImageReady} />
               )}
 
-              {/* Analyzing — loader replaces uploader */}
               {uploadPhase === "analyzing" && (
                 <AnalysisLoader onComplete={handleLoaderComplete} />
               )}
 
-              {/* Error state */}
               {uploadPhase === "error" && (
                 <motion.div
                   initial={{ opacity: 0, y: -6 }}

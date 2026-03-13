@@ -201,7 +201,7 @@ export function AnalysisLoader({ onComplete }: AnalysisLoaderProps) {
 
         {/* Footer */}
         <p className="text-center font-mono text-[11px] text-text-secondary">
-          Powered by Claude AI
+          Powered by Gemini AI
         </p>
       </div>
     </div>

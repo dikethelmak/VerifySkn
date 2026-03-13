@@ -1,191 +1,344 @@
-import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
-import {
-  createSupabaseServerClient,
-  saveImageAnalysis,
-  saveCombinedResult,
-  getProductByBarcode,
-} from "@/lib/supabase";
-import { computeCombinedResult } from "@/lib/scoring";
-import type { ScanVerdict } from "@/lib/database.types";
+import { NextRequest, NextResponse } from 'next/server'
+import { GoogleGenAI } from '@google/genai'
+import Groq from 'groq-sdk'
+import { validateProductImage } from '@/lib/image-validator'
+import { getCachedAnalysis, saveAnalysisToCache } from '@/lib/vision-cache'
+import { checkDailyVisionLimit } from '@/lib/vision-rate-limiter'
+import { createClient } from '@/lib/supabase/server'
+import { computeCombinedResult } from '@/lib/scoring'
+import type { ScanVerdict } from '@/lib/database.types'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! })
 
-const VALID_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-type SupportedMime = (typeof VALID_MIME_TYPES)[number];
+// ── Prompts ───────────────────────────────────────────────────────────────────
 
-// ~4 MB image cap (base64 is ~33% larger than raw bytes, so this ≈ 3 MB image)
-const MAX_BASE64_BYTES = 4 * 1024 * 1024;
+const BASE_SYSTEM = `You are a skincare product authentication expert.
+Analyse product packaging images to identify signs of counterfeiting.
+Respond ONLY in valid JSON with no markdown or preamble.`
 
-interface RequestBody {
-  base64: string;
-  mimeType: string;
-  sessionId?: string;
-  barcode?: string;
-}
+const FULL_USER_PROMPT = (brand?: string, productName?: string) =>
+  `Analyse this ${brand ? `${brand} ` : ''}${productName ?? 'skincare'} product packaging for authenticity.
 
-function toVerdict(raw: unknown): ScanVerdict {
-  if (raw === "authentic" || raw === "suspicious" || raw === "unverified") {
-    return raw;
-  }
-  return "unverified";
-}
+Check ALL of the following:
+- Font consistency and quality (blurring, irregular spacing, wrong weights)
+- Logo accuracy and print quality
+- Label alignment and print registration
+- Colour accuracy of brand colours
+- Hologram or seal presence
+- Spelling errors or grammatical inconsistencies
 
-function clampInt(value: unknown, fallback: number): number {
-  const n = Number(value);
-  return Number.isFinite(n) ? Math.min(100, Math.max(0, Math.round(n))) : fallback;
-}
-
-export async function POST(req: NextRequest) {
-  // ── Auth gate ─────────────────────────────────────────────
-  const supabase = createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  }
-
-  let body: RequestBody;
-
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
-
-  const { base64, mimeType, sessionId, barcode } = body;
-
-  if (!base64 || !mimeType) {
-    return NextResponse.json({ error: "Missing base64 or mimeType" }, { status: 400 });
-  }
-
-  if (base64.length > MAX_BASE64_BYTES) {
-    return NextResponse.json({ error: "Image too large. Maximum size is 4 MB." }, { status: 413 });
-  }
-
-  if (!VALID_MIME_TYPES.includes(mimeType as SupportedMime)) {
-    return NextResponse.json(
-      { error: "Unsupported image format. Use JPEG, PNG, or WebP." },
-      { status: 400 }
-    );
-  }
-
-  try {
-    // ── Claude Vision call ────────────────────────────────────
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1024,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mimeType as SupportedMime,
-                data: base64,
-              },
-            },
-            {
-              type: "text",
-              text: `You are an expert skincare product authenticator for VerifySkn. Analyse this product packaging image for authenticity.
-
-Return ONLY valid JSON with no markdown, no code fences, no other text:
+Return JSON only:
 {
   "result": "authentic" | "suspicious" | "unverified",
-  "confidence": 0-100,
-  "summary": "1-2 sentence plain-English visual assessment",
-  "flags": ["specific observable concern 1", "specific observable concern 2"],
-  "font_quality": "brief assessment of font sharpness and consistency",
-  "logo_accuracy": "brief assessment of logo placement, colour and detail accuracy",
-  "print_quality": "brief assessment of print resolution and colour consistency",
-  "label_alignment": "brief assessment of label placement and straightness",
-  "spelling_check": "note any spelling or text errors, or 'No errors found'",
-  "hologram_check": "assessment of hologram or security seal if visible, or 'Not visible'"
+  "confidence": number (0-100),
+  "flags": string[],
+  "summary": string,
+  "packaging_checks": {
+    "font_quality": "pass" | "fail" | "uncertain",
+    "logo_accuracy": "pass" | "fail" | "uncertain",
+    "print_quality": "pass" | "fail" | "uncertain",
+    "label_alignment": "pass" | "fail" | "uncertain",
+    "spelling": "pass" | "fail" | "uncertain",
+    "hologram": "pass" | "fail" | "uncertain" | "not_applicable"
+  }
+}`
+
+const QUICK_USER_PROMPT = (brand?: string, productName?: string) =>
+  `Quickly check this ${brand ? `${brand} ` : ''}${productName ?? 'skincare'} packaging.
+Focus ONLY on font quality and logo accuracy — these are the highest-signal indicators.
+Set all other packaging_checks fields to "uncertain" or "not_applicable".
+
+Return JSON only:
+{
+  "result": "authentic" | "suspicious" | "unverified",
+  "confidence": number (0-100),
+  "flags": string[],
+  "summary": string,
+  "packaging_checks": {
+    "font_quality": "pass" | "fail" | "uncertain",
+    "logo_accuracy": "pass" | "fail" | "uncertain",
+    "print_quality": "uncertain",
+    "label_alignment": "uncertain",
+    "spelling": "uncertain",
+    "hologram": "not_applicable"
+  }
+}`
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface PackagingAnalysis {
+  result: 'authentic' | 'suspicious' | 'unverified'
+  confidence: number
+  flags: string[]
+  summary: string
+  packaging_checks: {
+    font_quality: 'pass' | 'fail' | 'uncertain'
+    logo_accuracy: 'pass' | 'fail' | 'uncertain'
+    print_quality: 'pass' | 'fail' | 'uncertain'
+    label_alignment: 'pass' | 'fail' | 'uncertain'
+    spelling: 'pass' | 'fail' | 'uncertain'
+    hologram: 'pass' | 'fail' | 'uncertain' | 'not_applicable'
+  }
 }
 
-Rules:
-- result must be exactly one of: authentic, suspicious, unverified
-- confidence is a 0–100 integer
-- Keep each text field under 20 words
-- flags: 0–4 items, each describing a specific visual concern; empty array if none
-- If you cannot clearly see relevant features, use 'unverified' and note limitations`,
-            },
-          ],
-        },
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// Fix 2: wrap JSON.parse so callers get a clear error and can fall back to Groq
+function parseAnalysis(raw: string): PackagingAnalysis {
+  const clean = raw.replace(/```json|```/g, '').trim()
+
+  if (!clean) {
+    throw new Error('Vision model returned an empty response (possibly blocked by safety filter)')
+  }
+
+  let parsed: Record<string, unknown>
+  try {
+    parsed = JSON.parse(clean)
+  } catch {
+    throw new Error(`Vision model returned non-JSON: ${clean.slice(0, 120)}`)
+  }
+
+  return {
+    result: ['authentic', 'suspicious', 'unverified'].includes(parsed.result as string)
+      ? (parsed.result as PackagingAnalysis['result'])
+      : 'unverified',
+    confidence: typeof parsed.confidence === 'number'
+      ? Math.min(100, Math.max(0, parsed.confidence))
+      : 50,
+    flags: Array.isArray(parsed.flags) ? parsed.flags : [],
+    summary: (parsed.summary as string) ?? 'Analysis complete.',
+    packaging_checks: {
+      font_quality:    (parsed.packaging_checks as Record<string, string>)?.font_quality    ?? 'uncertain',
+      logo_accuracy:   (parsed.packaging_checks as Record<string, string>)?.logo_accuracy   ?? 'uncertain',
+      print_quality:   (parsed.packaging_checks as Record<string, string>)?.print_quality   ?? 'uncertain',
+      label_alignment: (parsed.packaging_checks as Record<string, string>)?.label_alignment ?? 'uncertain',
+      spelling:        (parsed.packaging_checks as Record<string, string>)?.spelling        ?? 'uncertain',
+      hologram:        (parsed.packaging_checks as Record<string, string>)?.hologram        ?? 'not_applicable',
+    } as PackagingAnalysis['packaging_checks'],
+  }
+}
+
+function isGeminiQuotaError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  const msg = error.message.toLowerCase()
+  return msg.includes('429') || msg.includes('quota') ||
+    msg.includes('resource_exhausted') || msg.includes('rate limit')
+}
+
+// ── Gemini schema ─────────────────────────────────────────────────────────────
+
+const GEMINI_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    result:     { type: 'STRING', enum: ['authentic', 'suspicious', 'unverified'] },
+    confidence: { type: 'NUMBER' },
+    flags:      { type: 'ARRAY', items: { type: 'STRING' } },
+    summary:    { type: 'STRING' },
+    packaging_checks: {
+      type: 'OBJECT',
+      properties: {
+        font_quality:    { type: 'STRING', enum: ['pass', 'fail', 'uncertain'] },
+        logo_accuracy:   { type: 'STRING', enum: ['pass', 'fail', 'uncertain'] },
+        print_quality:   { type: 'STRING', enum: ['pass', 'fail', 'uncertain'] },
+        label_alignment: { type: 'STRING', enum: ['pass', 'fail', 'uncertain'] },
+        spelling:        { type: 'STRING', enum: ['pass', 'fail', 'uncertain'] },
+        hologram:        { type: 'STRING', enum: ['pass', 'fail', 'uncertain', 'not_applicable'] },
+      },
+      required: ['font_quality', 'logo_accuracy', 'print_quality', 'label_alignment', 'spelling', 'hologram'],
+    },
+  },
+  required: ['result', 'confidence', 'flags', 'summary', 'packaging_checks'],
+}
+
+// ── Vision providers ──────────────────────────────────────────────────────────
+
+async function analyseWithGemini(
+  base64Image: string,
+  mimeType: string,
+  userPrompt: string
+): Promise<PackagingAnalysis> {
+  const response = await gemini.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: [{
+      role: 'user',
+      parts: [
+        { text: `${BASE_SYSTEM}\n\n${userPrompt}` },
+        { inlineData: { mimeType, data: base64Image } },
       ],
-    });
+    }],
+    config: { responseMimeType: 'application/json', responseSchema: GEMINI_SCHEMA, temperature: 0 },
+  })
 
-    const raw =
-      message.content[0].type === "text" ? message.content[0].text.trim() : "";
+  // Fix 12: handle safety filter rejections (empty candidates = 200 but refused)
+  const candidate = response.candidates?.[0]
+  if (!candidate || candidate.finishReason === 'SAFETY' || candidate.finishReason === 'RECITATION') {
+    throw new Error(`Gemini refused the image (finishReason: ${candidate?.finishReason ?? 'no candidates'})`)
+  }
 
-    // Strip markdown code fences defensively
-    const clean = raw
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/\s*```$/, "")
-      .trim();
+  const text = candidate.content?.parts?.[0]?.text ?? ''
+  return parseAnalysis(text)
+}
 
-    const parsed = JSON.parse(clean);
+async function analyseWithGroq(
+  base64Image: string,
+  mimeType: string,
+  userPrompt: string
+): Promise<PackagingAnalysis> {
+  const completion = await groq.chat.completions.create({
+    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'text', text: `${BASE_SYSTEM}\n\n${userPrompt}` },
+        { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } },
+      ],
+    }],
+    response_format: { type: 'json_object' },
+    temperature: 0,
+  })
+  const text = completion.choices[0]?.message?.content ?? ''
+  return parseAnalysis(text)
+}
 
-    const imageResult = toVerdict(parsed.result);
-    const imageConfidence = clampInt(parsed.confidence, 50);
+async function analysePackaging(
+  base64Image: string,
+  mimeType: string,
+  userPrompt: string
+): Promise<PackagingAnalysis & { provider: string }> {
+  try {
+    const result = await analyseWithGemini(base64Image, mimeType, userPrompt)
+    return { ...result, provider: 'gemini-2.5-flash' }
+  } catch (error) {
+    if (isGeminiQuotaError(error)) {
+      console.warn('[Gemini] Quota reached, switching to Groq')
+    } else {
+      console.error('[Gemini] Error, falling back to Groq:', (error as Error).message)
+    }
+  }
 
-    const analysisFields = {
-      result: imageResult,
-      confidence: imageConfidence,
-      summary: String(parsed.summary ?? ""),
-      flags: Array.isArray(parsed.flags) ? parsed.flags.slice(0, 4).map(String) : [],
-      font_quality: String(parsed.font_quality ?? ""),
-      logo_accuracy: String(parsed.logo_accuracy ?? ""),
-      print_quality: String(parsed.print_quality ?? ""),
-      label_alignment: String(parsed.label_alignment ?? ""),
-      spelling_check: String(parsed.spelling_check ?? ""),
-      hologram_check: String(parsed.hologram_check ?? ""),
-    };
+  try {
+    const result = await analyseWithGroq(base64Image, mimeType, userPrompt)
+    return { ...result, provider: 'groq-llama-4-scout' }
+  } catch (error) {
+    console.error('[Groq] Failed:', error)
+    throw new Error('All vision providers failed')
+  }
+}
 
-    // ── Persist image analysis ────────────────────────────────
-    await saveImageAnalysis(analysisFields);
+// ── Route handler ─────────────────────────────────────────────────────────────
 
-    // ── Optional combined result (when barcode was scanned) ───
-    let combinedPayload: {
-      barcodeResult: ScanVerdict;
-      barcodeConfidence: number;
-      finalResult: ScanVerdict;
-      finalConfidence: number;
-    } | null = null;
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { image, mimeType, barcode, productName, brand, sessionId: incomingSessionId } = body
 
-    if (sessionId && barcode) {
-      const product = await getProductByBarcode(barcode);
-      const barcodeResult: ScanVerdict = product ? "authentic" : "unverified";
-      const barcodeConfidence = product ? 92 : 50;
-
-      const { finalResult, finalConfidence } = computeCombinedResult({
-        barcodeResult,
-        barcodeConfidence,
-        imageResult,
-        imageConfidence,
-      });
-
-      await saveCombinedResult({
-        session_id: sessionId,
-        barcode_result: barcodeResult,
-        barcode_confidence: barcodeConfidence,
-        image_result: imageResult,
-        image_confidence: imageConfidence,
-        final_result: finalResult,
-        final_confidence: finalConfidence,
-        product_id: product?.id ?? null,
-      });
-
-      combinedPayload = { barcodeResult, barcodeConfidence, finalResult, finalConfidence };
+    if (!image || !mimeType) {
+      return NextResponse.json({ error: 'image and mimeType are required' }, { status: 400 })
     }
 
-    return NextResponse.json({
-      ...analysisFields,
-      ...(combinedPayload ?? {}),
-    });
-  } catch (err) {
-    console.error("[api/analyse-product]", err);
-    return NextResponse.json({ error: "Analysis failed" }, { status: 500 });
+    // Risk 2: pre-screen before any API call
+    const validation = validateProductImage(image, mimeType)
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.reason }, { status: 400 })
+    }
+
+    // Fix 3: honour the barcode session_id so combined results can be linked
+    const sessionId = typeof incomingSessionId === 'string' && incomingSessionId
+      ? incomingSessionId
+      : crypto.randomUUID()
+
+    const supabase = createClient()
+
+    // Fix 5: derive barcode confidence from DB — never trust the client value
+    let barcodeResult: ScanVerdict | null = null
+    let barcodeConfidence: number | null = null
+    let productId: string | null = null
+
+    // Only query DB with well-formed barcodes (EAN-8/13 or UPC-A/E: digits only, 6–14 chars)
+    const validBarcode = typeof barcode === 'string' && /^\d{6,14}$/.test(barcode)
+
+    if (validBarcode) {
+      const { data: product } = await supabase
+        .from('products')
+        .select('id')
+        .eq('barcode', barcode)
+        .maybeSingle()
+
+      barcodeResult     = product ? 'authentic' : 'unverified'
+      barcodeConfidence = product ? 92 : 50
+      productId         = product?.id ?? null
+    }
+
+    // Risk 3: cache check — BEFORE rate limit so cache hits don't burn quota (Fix 1)
+    const cached = await getCachedAnalysis(barcode, brand)
+
+    if (cached) {
+      // Await so the session_id row exists before we return it to the client
+      await saveAnalysisToCache(cached, sessionId, barcode, brand)
+
+      // Fix 3: write combined result even for cache hits
+      if (barcodeResult !== null && barcodeConfidence !== null) {
+        const combined = computeCombinedResult({
+          barcodeResult, barcodeConfidence,
+          imageResult: cached.result, imageConfidence: cached.confidence,
+        })
+        supabase.from('combined_results').insert({
+          session_id:         sessionId,
+          barcode_result:     barcodeResult,
+          barcode_confidence: barcodeConfidence,
+          image_result:       cached.result,
+          image_confidence:   cached.confidence,
+          final_result:       combined.finalResult,
+          final_confidence:   combined.finalConfidence,
+          product_id:         productId,
+        }).then(() => {}).catch(() => {})
+      }
+
+      return NextResponse.json({ ...cached, sessionId, fromCache: true })
+    }
+
+    // Fix 1: only check rate limit when we're about to call an API
+    const rateLimit = await checkDailyVisionLimit()
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'High demand — image analysis is temporarily unavailable. Try again tomorrow.' },
+        { status: 429 }
+      )
+    }
+
+    // Risk 5: use derived confidence (Fix 5) — never the client-supplied value
+    const highConfidence = barcodeConfidence !== null && barcodeConfidence > 70
+    const userPrompt = highConfidence
+      ? QUICK_USER_PROMPT(brand, productName)
+      : FULL_USER_PROMPT(brand, productName)
+
+    const analysis = await analysePackaging(image, mimeType, userPrompt)
+
+    // Await so the row exists before we return the sessionId to the client
+    await saveAnalysisToCache(analysis, sessionId, barcode, brand)
+
+    // Fix 3: write combined result when barcode was also scanned
+    if (barcodeResult !== null && barcodeConfidence !== null) {
+      const combined = computeCombinedResult({
+        barcodeResult, barcodeConfidence,
+        imageResult: analysis.result, imageConfidence: analysis.confidence,
+      })
+      supabase.from('combined_results').insert({
+        session_id:         sessionId,
+        barcode_result:     barcodeResult,
+        barcode_confidence: barcodeConfidence,
+        image_result:       analysis.result,
+        image_confidence:   analysis.confidence,
+        final_result:       combined.finalResult,
+        final_confidence:   combined.finalConfidence,
+        product_id:         productId,
+      }).then(() => {}).catch(() => {})
+    }
+
+    return NextResponse.json({ ...analysis, sessionId, fromCache: false })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Analysis failed'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

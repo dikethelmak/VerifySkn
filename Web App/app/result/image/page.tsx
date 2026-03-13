@@ -1,17 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { TriangleAlert } from "lucide-react";
 import { ResultHero } from "@/components/ResultHero";
 import { cn } from "@/lib/utils";
-import {
-  IMAGE_SESSION_KEY,
-  type ImageAnalysisSession,
-} from "@/lib/imageSession";
+import { createClient } from "@/lib/supabase/client";
 import type { ScanVerdict } from "@/lib/database.types";
+import { IMAGE_SESSION_KEY, type ImageAnalysisSession } from "@/lib/imageSession";
+
+// ── Types ─────────────────────────────────────────────────────
+
+interface ImageResult {
+  result: ScanVerdict;
+  confidence: number;
+  summary: string;
+  flags: string[];
+  font_quality: string;
+  logo_accuracy: string;
+  print_quality: string;
+  label_alignment: string;
+  spelling_check: string;
+  hologram_check: string;
+  // combined — present when barcode was also scanned
+  barcodeConfidence?: number;
+  finalResult?: ScanVerdict;
+  finalConfidence?: number;
+}
 
 // ── Badge helpers ─────────────────────────────────────────────
 
@@ -34,43 +51,16 @@ const VERDICT_COLOR: Record<ScanVerdict, string> = {
 };
 
 function normalizeCheck(value: string | undefined | null): CheckBadge {
-  if (!value || value.trim() === "" || /^n\/?a$/i.test(value.trim())) {
-    return "na";
-  }
+  if (!value || value.trim() === "" || /^n\/?a$/i.test(value.trim())) return "na";
   const lower = value.toLowerCase();
-  if (
-    /\b(good|excellent|pass|clear|correct|verified|present|accurate|aligned|consistent|authentic|no error|no issue|legitimate|standard|proper|high|sharp)\b/.test(
-      lower
-    )
-  ) {
-    return "pass";
-  }
-  if (
-    /\b(poor|bad|fail|missing|incorrect|blurry|misaligned|error|suspicious|counterfeit|tampered|inconsistent|absent|wrong|invalid|not present|low quality|smudged)\b/.test(
-      lower
-    )
-  ) {
-    return "fail";
-  }
+  if (/\b(good|excellent|pass|clear|correct|verified|present|accurate|aligned|consistent|authentic|no error|no issue|legitimate|standard|proper|high|sharp)\b/.test(lower)) return "pass";
+  if (/\b(poor|bad|fail|missing|incorrect|blurry|misaligned|error|suspicious|counterfeit|tampered|inconsistent|absent|wrong|invalid|not present|low quality|smudged)\b/.test(lower)) return "fail";
   return "uncertain";
 }
 
-// ── Packaging checks data ─────────────────────────────────────
+// ── Sub-components ────────────────────────────────────────────
 
-interface CheckItem {
-  key: keyof Pick<
-    ImageAnalysisSession,
-    | "font_quality"
-    | "logo_accuracy"
-    | "print_quality"
-    | "label_alignment"
-    | "spelling_check"
-    | "hologram_check"
-  >;
-  label: string;
-}
-
-const CHECKS: CheckItem[] = [
+const CHECKS: { key: keyof Pick<ImageResult, "font_quality" | "logo_accuracy" | "print_quality" | "label_alignment" | "spelling_check" | "hologram_check">; label: string }[] = [
   { key: "font_quality",    label: "Font Quality"    },
   { key: "logo_accuracy",   label: "Logo Accuracy"   },
   { key: "print_quality",   label: "Print Quality"   },
@@ -79,29 +69,12 @@ const CHECKS: CheckItem[] = [
   { key: "hologram_check",  label: "Hologram"        },
 ];
 
-// ── Sub-components ────────────────────────────────────────────
-
-function CheckCard({
-  label,
-  badge,
-}: {
-  label: string;
-  badge: CheckBadge;
-}) {
+function CheckCard({ label, badge }: { label: string; badge: CheckBadge }) {
   const { label: badgeLabel, bg, color } = BADGE_CONFIG[badge];
-
   return (
-    <div
-      className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm"
-      style={{ borderRadius: 14 }}
-    >
-      <p className="font-rethink text-sm font-semibold text-text-primary">
-        {label}
-      </p>
-      <span
-        className="w-fit rounded-full px-2.5 py-0.5 font-rethink text-xs font-medium"
-        style={{ backgroundColor: bg, color }}
-      >
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm" style={{ borderRadius: 14 }}>
+      <p className="font-rethink text-sm font-semibold text-text-primary">{label}</p>
+      <span className="w-fit rounded-full px-2.5 py-0.5 font-rethink text-xs font-medium" style={{ backgroundColor: bg, color }}>
         {badgeLabel}
       </span>
     </div>
@@ -110,27 +83,14 @@ function CheckCard({
 
 function FlagsSection({ flags }: { flags: string[] }) {
   if (flags.length === 0) return null;
-
   return (
-    <div
-      className="rounded-xl p-4"
-      style={{ backgroundColor: "#FDF2F2", borderRadius: 12 }}
-    >
-      <p className="mb-3 font-rethink text-sm font-semibold" style={{ color: "#C0392B" }}>
-        Issues Detected
-      </p>
+    <div className="rounded-xl p-4" style={{ backgroundColor: "#FDF2F2", borderRadius: 12 }}>
+      <p className="mb-3 font-rethink text-sm font-semibold" style={{ color: "#C0392B" }}>Issues Detected</p>
       <ul className="flex flex-col gap-2">
         {flags.map((flag, i) => (
           <li key={i} className="flex items-start gap-2">
-            <TriangleAlert
-              size={14}
-              strokeWidth={2}
-              className="mt-0.5 shrink-0"
-              style={{ color: "#C0392B" }}
-            />
-            <span className="font-rethink text-sm font-normal text-text-primary">
-              {flag}
-            </span>
+            <TriangleAlert size={14} strokeWidth={2} className="mt-0.5 shrink-0" style={{ color: "#C0392B" }} />
+            <span className="font-rethink text-sm font-normal text-text-primary">{flag}</span>
           </li>
         ))}
       </ul>
@@ -138,25 +98,14 @@ function FlagsSection({ flags }: { flags: string[] }) {
   );
 }
 
-function ConfidenceBar({
-  label,
-  value,
-  delay,
-}: {
-  label: string;
-  value: number;
-  delay: number;
-}) {
+function ConfidenceBar({ label, value, delay }: { label: string; value: number; delay: number }) {
   return (
     <div className="flex-1">
       <div className="mb-1.5 flex items-center justify-between">
         <span className="font-rethink text-xs text-text-secondary">{label}</span>
         <span className="font-mono text-xs text-text-primary">{value}%</span>
       </div>
-      <div
-        className="h-2 overflow-hidden rounded-full"
-        style={{ backgroundColor: "#E5E2DD" }}
-      >
+      <div className="h-2 overflow-hidden rounded-full" style={{ backgroundColor: "#E5E2DD" }}>
         <motion.div
           className="h-full rounded-full bg-primary"
           initial={{ width: 0 }}
@@ -168,33 +117,19 @@ function ConfidenceBar({
   );
 }
 
-function CombinedSection({
-  barcodeConfidence,
-  imageConfidence,
-  finalResult,
-  finalConfidence,
-}: {
+function CombinedSection({ barcodeConfidence, imageConfidence, finalResult, finalConfidence }: {
   barcodeConfidence: number;
   imageConfidence: number;
   finalResult: ScanVerdict;
   finalConfidence: number;
 }) {
   return (
-    <div
-      className="rounded-2xl border border-border bg-surface p-6 shadow-sm"
-      style={{ borderRadius: 16 }}
-    >
-      <p className="mb-4 font-rethink text-sm font-semibold text-text-primary">
-        Combined Analysis
-      </p>
-
-      {/* Side-by-side progress bars */}
+    <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm" style={{ borderRadius: 16 }}>
+      <p className="mb-4 font-rethink text-sm font-semibold text-text-primary">Combined Analysis</p>
       <div className="flex gap-5">
         <ConfidenceBar label="Barcode" value={barcodeConfidence} delay={0.1} />
         <ConfidenceBar label="Image"   value={imageConfidence}   delay={0.25} />
       </div>
-
-      {/* Final combined score */}
       <div className="mt-5 flex items-end gap-2">
         <motion.span
           initial={{ opacity: 0, y: 8 }}
@@ -205,9 +140,7 @@ function CombinedSection({
         >
           {finalConfidence}%
         </motion.span>
-        <span className="mb-1 font-rethink text-sm capitalize text-text-secondary">
-          {finalResult}
-        </span>
+        <span className="mb-1 font-rethink text-sm capitalize text-text-secondary">{finalResult}</span>
       </div>
       <p className="mt-1.5 font-rethink text-[13px] text-text-secondary">
         Based on barcode verification and packaging analysis
@@ -221,21 +154,13 @@ function ActionButtons() {
     <div className="flex flex-col gap-3 pt-2 sm:flex-row">
       <Link
         href="/scan"
-        className={cn(
-          "flex flex-1 items-center justify-center rounded-xl px-6 py-3",
-          "bg-primary font-rethink text-base font-medium text-white",
-          "transition-colors hover:bg-primary/90 active:scale-[0.98]"
-        )}
+        className={cn("flex flex-1 items-center justify-center rounded-xl px-6 py-3", "bg-primary font-rethink text-base font-medium text-white", "transition-colors hover:bg-primary/90 active:scale-[0.98]")}
       >
         Scan Another Product
       </Link>
       <Link
         href="/report"
-        className={cn(
-          "flex flex-1 items-center justify-center rounded-xl border px-6 py-3",
-          "border-primary font-rethink text-base font-medium text-primary",
-          "transition-colors hover:bg-primary/5 active:scale-[0.98]"
-        )}
+        className={cn("flex flex-1 items-center justify-center rounded-xl border px-6 py-3", "border-primary font-rethink text-base font-medium text-primary", "transition-colors hover:bg-primary/5 active:scale-[0.98]")}
       >
         Report This Product
       </Link>
@@ -243,59 +168,138 @@ function ActionButtons() {
   );
 }
 
-// ── Page ─────────────────────────────────────────────────────
+function LoadingSpinner() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-primary border-t-transparent" aria-label="Loading…" />
+    </div>
+  );
+}
 
-export default function ImageResultPage() {
+// ── Inner page (uses useSearchParams — must be inside Suspense) ───────────────
+
+function ImageResultContent() {
   const router = useRouter();
-  const [data, setData] = useState<ImageAnalysisSession | null>(null);
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("session");
+
+  const [data, setData] = useState<ImageResult | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem(IMAGE_SESSION_KEY);
-
-    if (!raw) {
+    if (!sessionId) {
       router.replace("/scan");
       return;
     }
 
-    try {
-      setData(JSON.parse(raw) as ImageAnalysisSession);
-      setReady(true);
-    } catch {
-      router.replace("/scan");
-    }
-  }, [router]);
+    // TypeScript narrowing helper — sessionId is guaranteed non-null after guard above
+    const sid: string = sessionId;
+    const supabase = createClient();
 
-  // Server render / initial client render before sessionStorage is read
-  if (!ready || !data) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div
-          className="h-9 w-9 animate-spin rounded-full border-[3px] border-primary border-t-transparent"
-          aria-label="Loading…"
-        />
-      </div>
-    );
-  }
+    async function load() {
+      // Try Supabase first; fall back to sessionStorage if DB is unavailable
+      let analysis: {
+        result: string; confidence: number; summary: string; flags: string[];
+        font_quality: string; logo_accuracy: string; print_quality: string;
+        label_alignment: string; spelling_check: string; hologram_check: string;
+      } | null = null;
+
+      try {
+        const { data } = await supabase
+          .from("image_analyses")
+          .select("result, confidence, summary, flags, font_quality, logo_accuracy, print_quality, label_alignment, spelling_check, hologram_check")
+          .eq("session_id", sid)
+          .order("analysed_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        analysis = data;
+      } catch {
+        // Supabase unavailable — will try sessionStorage
+      }
+
+      // Fallback: read from sessionStorage (written by scan page right after API call)
+      if (!analysis) {
+        try {
+          const raw = sessionStorage.getItem(IMAGE_SESSION_KEY);
+          if (raw) {
+            const cached: ImageAnalysisSession = JSON.parse(raw);
+            // Only use this cache entry if it matches the current session
+            if (cached.sessionId === sid) {
+              analysis = {
+                result:          cached.result,
+                confidence:      cached.confidence,
+                summary:         cached.summary,
+                flags:           cached.flags,
+                font_quality:    cached.font_quality,
+                logo_accuracy:   cached.logo_accuracy,
+                print_quality:   cached.print_quality,
+                label_alignment: cached.label_alignment,
+                spelling_check:  cached.spelling_check,
+                hologram_check:  cached.hologram_check,
+              };
+            }
+          }
+        } catch {
+          // sessionStorage unavailable
+        }
+      }
+
+      if (!analysis) {
+        router.replace("/scan");
+        return;
+      }
+
+      // Try to get combined results (best-effort — not critical for display)
+      let combined: { barcode_confidence: number | null; final_result: string; final_confidence: number } | null = null;
+      try {
+        const { data } = await supabase
+          .from("combined_results")
+          .select("barcode_confidence, final_result, final_confidence")
+          .eq("session_id", sid)
+          .limit(1)
+          .maybeSingle();
+        combined = data;
+      } catch {
+        // Combined results unavailable — show image-only result
+      }
+
+      setData({
+        result:          analysis.result as ScanVerdict,
+        confidence:      analysis.confidence,
+        summary:         analysis.summary ?? "",
+        flags:           analysis.flags ?? [],
+        font_quality:    analysis.font_quality ?? "",
+        logo_accuracy:   analysis.logo_accuracy ?? "",
+        print_quality:   analysis.print_quality ?? "",
+        label_alignment: analysis.label_alignment ?? "",
+        spelling_check:  analysis.spelling_check ?? "",
+        hologram_check:  analysis.hologram_check ?? "",
+        ...(combined
+          ? {
+              barcodeConfidence: combined.barcode_confidence ?? undefined,
+              finalResult:       combined.final_result as ScanVerdict,
+              finalConfidence:   combined.final_confidence,
+            }
+          : {}),
+      });
+      setReady(true);
+    }
+
+    load().catch(() => router.replace("/scan"));
+  }, [sessionId, router]);
+
+  if (!ready || !data) return <LoadingSpinner />;
 
   const hasCombined =
-    data.sessionId !== undefined &&
     data.barcodeConfidence !== undefined &&
     data.finalResult !== undefined &&
     data.finalConfidence !== undefined;
 
   return (
     <main className="min-h-screen bg-background">
-      {/* ── Hero ── */}
-      <ResultHero
-        verdict={data.result}
-        confidence={data.confidence}
-        summary={data.summary || undefined}
-      />
+      <ResultHero verdict={data.result} confidence={data.confidence} summary={data.summary || undefined} />
 
-      {/* ── Content ── */}
       <div className="mx-auto max-w-lg space-y-4 px-5 py-8">
-        {/* Packaging checks — 2 × 3 staggered grid */}
         <section>
           <h2 className="mb-3 font-rethink text-sm font-semibold uppercase tracking-widest text-text-secondary">
             Packaging Checks
@@ -308,21 +312,14 @@ export default function ImageResultPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: i * 0.08, ease: "easeOut" }}
               >
-                <CheckCard
-                  label={check.label}
-                  badge={normalizeCheck(data[check.key])}
-                />
+                <CheckCard label={check.label} badge={normalizeCheck(data[check.key])} />
               </motion.div>
             ))}
           </div>
         </section>
 
-        {/* Flags */}
-        {data.flags && data.flags.length > 0 && (
-          <FlagsSection flags={data.flags} />
-        )}
+        {data.flags && data.flags.length > 0 && <FlagsSection flags={data.flags} />}
 
-        {/* Combined confidence — only when barcode was also scanned */}
         {hasCombined && (
           <CombinedSection
             barcodeConfidence={data.barcodeConfidence!}
@@ -332,9 +329,18 @@ export default function ImageResultPage() {
           />
         )}
 
-        {/* Actions */}
         <ActionButtons />
       </div>
     </main>
+  );
+}
+
+// ── Page (wraps inner in Suspense for useSearchParams) ────────────────────────
+
+export default function ImageResultPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <ImageResultContent />
+    </Suspense>
   );
 }
