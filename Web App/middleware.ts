@@ -5,12 +5,29 @@ const PROTECTED = ["/admin", "/dashboard", "/report", "/brand"];
 const AUTH_ONLY  = ["/auth/login", "/auth/signup"];
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const { pathname } = request.nextUrl;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
+  const isAuthPage  = AUTH_ONLY.some((p) => pathname.startsWith(p));
+
+  // Skip Supabase entirely for routes that don't need auth checks
+  if (!isProtected && !isAuthPage) {
+    return NextResponse.next({ request });
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // If env vars are missing, fail open — pages do their own auth checks
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.next({ request });
+  }
+
+  let response = NextResponse.next({ request });
+  let session = null;
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet) => {
@@ -23,18 +40,14 @@ export async function middleware(request: NextRequest) {
           );
         },
       },
-    }
-  );
+    });
 
-  // Refresh session — keeps cookies up to date
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const { pathname } = request.nextUrl;
-
-  const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
-  const isAuthPage  = AUTH_ONLY.some((p) => pathname.startsWith(p));
+    // Refresh session — keeps cookies up to date
+    ({ data: { session } } = await supabase.auth.getSession());
+  } catch {
+    // Supabase unavailable — fail open, pages enforce auth independently
+    return NextResponse.next({ request });
+  }
 
   // Unauthenticated → redirect to login, preserve intended destination
   if (isProtected && !session) {
