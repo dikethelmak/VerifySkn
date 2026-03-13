@@ -100,8 +100,7 @@ export function Scanner({ onScan, onDetect, className }: ScannerProps) {
         const tick = async () => {
           if (cancelled || hasDetectedRef.current) return;
           try {
-            // @ts-expect-error
-            const barcodes = await detector.detect(videoEl);
+            const barcodes = await (detector as { detect: (v: HTMLVideoElement) => Promise<{ rawValue: string }[]> }).detect(videoEl);
             if (barcodes.length > 0) {
               handleResult(barcodes[0].rawValue);
               return;

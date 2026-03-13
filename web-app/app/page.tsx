@@ -90,31 +90,6 @@ function Step({
   );
 }
 
-function VerdictBadge({ verdict }: { verdict: ScanVerdict }) {
-  const styles: Record<ScanVerdict, { bg: string; text: string }> = {
-    authentic:  { bg: "rgba(45,122,79,0.1)",  text: "#2D7A4F" },
-    unverified: { bg: "rgba(224,123,42,0.1)", text: "#E07B2A" },
-    suspicious: { bg: "rgba(192,57,43,0.1)",  text: "#C0392B" },
-  };
-  const { bg, text } = styles[verdict];
-  return (
-    <span
-      className="inline-block rounded-full px-2.5 py-1 font-rethink text-xs font-medium capitalize"
-      style={{ backgroundColor: bg, color: text }}
-    >
-      {verdict}
-    </span>
-  );
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function ScanIcon({ className }: { className?: string }) {
   return (
