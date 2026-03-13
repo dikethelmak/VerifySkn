@@ -15,8 +15,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Prefer server-only vars (reliably available in Edge runtime).
+  // NEXT_PUBLIC_ vars are inlined at build time and can be undefined in Edge middleware.
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   // If env vars are missing, fail open — pages do their own auth checks
   if (!supabaseUrl || !supabaseKey) {
