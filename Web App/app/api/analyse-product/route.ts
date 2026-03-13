@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
           final_result:       combined.finalResult,
           final_confidence:   combined.finalConfidence,
           product_id:         productId,
-        }).then(() => {}).catch(() => {})
+        }).catch(() => {})
       }
 
       return NextResponse.json({ ...cached, sessionId, fromCache: true })
@@ -333,7 +333,7 @@ export async function POST(request: NextRequest) {
         final_result:       combined.finalResult,
         final_confidence:   combined.finalConfidence,
         product_id:         productId,
-      }).then(() => {}).catch(() => {})
+      }).catch(() => {})
     }
 
     return NextResponse.json({ ...analysis, sessionId, fromCache: false })
