@@ -58,9 +58,8 @@ export const redditScraper: ScraperAdapter = {
           }
 
           const comments = await post.comments.fetchMore({ amount: 10 })
-          const commentText = comments
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .map((c: any) => c.body)
+          const commentText = (comments as { body?: string }[])
+            .map((c) => c.body)
             .filter(Boolean)
             .join('\n')
 
