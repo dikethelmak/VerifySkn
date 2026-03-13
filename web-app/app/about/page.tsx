@@ -160,28 +160,7 @@ export default function AboutPage() {
       <section className="py-16">
         <div className="mx-auto max-w-3xl px-6">
           <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm">
-            <div
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl"
-              style={{ backgroundColor: "rgba(201,168,76,0.12)" }}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#C9A84C"
-                strokeWidth={2}
-                aria-hidden
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21"
-                />
-              </svg>
-            </div>
-
-            <h2 className="mt-4 font-fraunces text-2xl font-semibold text-primary">
+            <h2 className="font-fraunces text-2xl font-semibold text-primary">
               Are you a brand?
             </h2>
             <p className="mt-2 font-rethink text-sm leading-relaxed text-text-secondary">

@@ -485,6 +485,84 @@ export interface Database {
         };
         Relationships: [];
       };
+      fake_visual_patterns: {
+        Row: {
+          id:               string;
+          brand:            string;
+          product_id:       string | null;
+          marker_type:      'font' | 'logo' | 'color' | 'hologram' | 'seal' | 'text' | 'packaging' | 'barcode' | 'other';
+          description:      string;
+          source_post_url:  string | null;
+          source_platform:  string | null;
+          ai_confidence:    number;
+          occurrence_count: number;
+          last_seen:        string;
+          created_at:       string;
+        };
+        Insert: {
+          id?:              string;
+          brand:            string;
+          product_id?:      string | null;
+          marker_type:      'font' | 'logo' | 'color' | 'hologram' | 'seal' | 'text' | 'packaging' | 'barcode' | 'other';
+          description:      string;
+          source_post_url?: string | null;
+          source_platform?: string | null;
+          ai_confidence?:   number;
+          occurrence_count?: number;
+          last_seen?:       string;
+          created_at?:      string;
+        };
+        Update: {
+          id?:              string;
+          brand?:           string;
+          product_id?:      string | null;
+          marker_type?:     'font' | 'logo' | 'color' | 'hologram' | 'seal' | 'text' | 'packaging' | 'barcode' | 'other';
+          description?:     string;
+          source_post_url?: string | null;
+          source_platform?: string | null;
+          ai_confidence?:   number;
+          occurrence_count?: number;
+          last_seen?:       string;
+          created_at?:      string;
+        };
+        Relationships: [];
+      };
+      social_signal_summary: {
+        Row: {
+          id:               string;
+          brand:            string;
+          product_id:       string | null;
+          fake_reports_7d:  number;
+          fake_reports_30d: number;
+          fake_reports_90d: number;
+          total_reports:    number;
+          trending:         boolean;
+          last_updated:     string;
+        };
+        Insert: {
+          id?:               string;
+          brand:             string;
+          product_id?:       string | null;
+          fake_reports_7d?:  number;
+          fake_reports_30d?: number;
+          fake_reports_90d?: number;
+          total_reports?:    number;
+          trending?:         boolean;
+          last_updated?:     string;
+        };
+        Update: {
+          id?:               string;
+          brand?:            string;
+          product_id?:       string | null;
+          fake_reports_7d?:  number;
+          fake_reports_30d?: number;
+          fake_reports_90d?: number;
+          total_reports?:    number;
+          trending?:         boolean;
+          last_updated?:     string;
+        };
+        Relationships: [];
+      };
       combined_results: {
         Row: {
           id: string;
@@ -574,6 +652,16 @@ export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 export type AppNotification = Database["public"]["Tables"]["notifications"]["Row"];
+
+export type FakeVisualPattern =
+  Database["public"]["Tables"]["fake_visual_patterns"]["Row"];
+export type FakeVisualPatternInsert =
+  Database["public"]["Tables"]["fake_visual_patterns"]["Insert"];
+
+export type SocialSignalSummary =
+  Database["public"]["Tables"]["social_signal_summary"]["Row"];
+export type SocialSignalSummaryInsert =
+  Database["public"]["Tables"]["social_signal_summary"]["Insert"];
 
 export interface DashboardStats {
   totalProducts: number;

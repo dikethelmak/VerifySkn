@@ -14,6 +14,7 @@ type ScanState =
 
 export interface ScannerProps {
   onScan: (barcode: string) => void;
+  onDetect?: () => void;
   className?: string;
 }
 
@@ -24,57 +25,37 @@ const SUCCESS = "#2D7A4F";
 
 // ── Scanner ──────────────────────────────────────────────────
 
-export function Scanner({ onScan, className }: ScannerProps) {
+export function Scanner({ onScan, onDetect, className }: ScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<{ reset: () => void } | null>(null);
-  // Stable ref so the zxing callback always calls the latest onScan
+  // Stable refs so zxing callbacks always call the latest handlers
   const onScanRef = useRef(onScan);
+  const onDetectRef = useRef(onDetect);
   useEffect(() => {
     onScanRef.current = onScan;
-  }, [onScan]);
+    onDetectRef.current = onDetect;
+  }, [onScan, onDetect]);
 
   const hasDetectedRef = useRef(false);
   const [scanState, setScanState] = useState<ScanState>("permission-pending");
   const [manualInput, setManualInput] = useState("");
 
+  const streamRef = useRef<MediaStream | null>(null);
+  const rafRef = useRef<number | null>(null);
+
   useEffect(() => {
     let cancelled = false;
 
     async function startCamera() {
-      if (!videoRef.current) return;
+      const videoEl = videoRef.current;
+      if (!videoEl) return;
 
+      // Request rear camera
+      let stream: MediaStream;
       try {
-        const { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } =
-          await import("@zxing/library");
-
-        if (cancelled) return;
-
-        const hints = new Map();
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-          BarcodeFormat.EAN_13,
-          BarcodeFormat.UPC_A,
-        ]);
-
-        const reader = new BrowserMultiFormatReader(hints);
-        readerRef.current = reader;
-
-        // decodeFromVideoDevice resolves once the video stream starts playing.
-        // The callback fires on every decoded frame thereafter.
-        await reader.decodeFromVideoDevice(
-          null, // null → use default camera
-          videoRef.current,
-          (result) => {
-            if (result && !hasDetectedRef.current) {
-              hasDetectedRef.current = true;
-              setScanState("detected");
-              reader.reset();
-              // Brief green-flash window before handing off
-              setTimeout(() => onScanRef.current(result.getText()), 700);
-            }
-          }
-        );
-
-        if (!cancelled) setScanState("scanning");
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } },
+        });
       } catch (err: unknown) {
         if (cancelled) return;
         const error = err as Error;
@@ -85,13 +66,85 @@ export function Scanner({ onScan, className }: ScannerProps) {
         ) {
           setScanState("permission-denied");
         }
+        return;
       }
+
+      if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+
+      streamRef.current = stream;
+      videoEl.srcObject = stream;
+      videoEl.setAttribute("playsinline", "true");
+      await videoEl.play();
+
+      if (cancelled) return;
+      setScanState("scanning");
+
+      function handleResult(rawValue: string) {
+        if (hasDetectedRef.current) return;
+        hasDetectedRef.current = true;
+        setScanState("detected");
+        // Stop scanning immediately
+        if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+        stream.getTracks().forEach((t) => t.stop());
+        onDetectRef.current?.();
+        setTimeout(() => onScanRef.current(rawValue), 400);
+      }
+
+      // ── Native BarcodeDetector (Chrome / Edge / Safari 17+) ──────────
+      if ("BarcodeDetector" in window) {
+        // @ts-expect-error — BarcodeDetector not yet in lib.dom.d.ts for all envs
+        const detector = new window.BarcodeDetector({
+          formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39"],
+        });
+
+        const tick = async () => {
+          if (cancelled || hasDetectedRef.current) return;
+          try {
+            // @ts-expect-error
+            const barcodes = await detector.detect(videoEl);
+            if (barcodes.length > 0) {
+              handleResult(barcodes[0].rawValue);
+              return;
+            }
+          } catch { /* ignore frame errors */ }
+          rafRef.current = requestAnimationFrame(tick);
+        };
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+
+      // ── @zxing/library fallback ──────────────────────────────────────
+      const { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } =
+        await import("@zxing/library");
+      if (cancelled) return;
+
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+      ]);
+
+      const reader = new BrowserMultiFormatReader(hints);
+      readerRef.current = reader;
+
+      // Feed the existing stream into the reader directly via video element
+      reader.decodeFromStream(stream, videoEl, (result) => {
+        if (result && !hasDetectedRef.current) {
+          handleResult(result.getText());
+        }
+      });
     }
 
     startCamera();
 
     return () => {
       cancelled = true;
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      streamRef.current?.getTracks().forEach((t) => t.stop());
       readerRef.current?.reset();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

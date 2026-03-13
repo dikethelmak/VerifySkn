@@ -1,12 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Barcode, Camera } from "lucide-react";
-import {
-  getRecentScans,
-  getProductIdsWithCombinedResults,
-} from "@/lib/supabase";
-import type { ScanVerdict } from "@/lib/database.types";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "VerifySkn — Scan Skincare Products for Authenticity",
@@ -19,17 +12,7 @@ export const metadata: Metadata = {
   },
 };
 
-// No cache — always fetch fresh stats on each request
-export const dynamic = 'force-dynamic';
-
 export default async function HomePage() {
-  const recentScans = await getRecentScans(5);
-
-  // Determine which recent scans have an associated image analysis
-  const productIds = recentScans
-    .map((s) => s.product_id)
-    .filter((id): id is string => id !== null);
-  const combinedProductIds = await getProductIdsWithCombinedResults(productIds);
 
   return (
     <main>
@@ -81,102 +64,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Recent scans ── */}
-      {recentScans.length > 0 && (
-        <section className="border-t border-border px-6 py-12">
-          <div className="mx-auto max-w-3xl">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="font-fraunces text-2xl font-semibold text-text-primary">
-                Recent Scans
-              </h2>
-              <Link
-                href="/history"
-                className="font-rethink text-sm text-primary underline-offset-2 hover:underline"
-              >
-                View all →
-              </Link>
-            </div>
-
-            <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-sm">
-              <table className="w-full min-w-[480px] border-collapse text-left">
-                <thead>
-                  <tr className="border-b border-border">
-                    {["Barcode", "Product", "Result", "Type", "Date"].map((h) => (
-                      <th
-                        key={h}
-                        className="px-5 py-3.5 font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentScans.map((scan, i) => {
-                    const product = scan.product as
-                      | { name: string; brand: string }
-                      | null;
-                    const isLast = i === recentScans.length - 1;
-                    const hasCombined =
-                      scan.product_id !== null &&
-                      combinedProductIds.has(scan.product_id);
-
-                    return (
-                      <tr
-                        key={scan.id}
-                        className={cn(
-                          "transition-colors hover:bg-background",
-                          !isLast && "border-b border-border"
-                        )}
-                      >
-                        <td className="px-5 py-4">
-                          <Link
-                            href={`/result/${encodeURIComponent(scan.barcode_scanned)}`}
-                            className="font-mono text-sm text-primary underline-offset-2 hover:underline"
-                          >
-                            {scan.barcode_scanned}
-                          </Link>
-                        </td>
-                        <td className="px-5 py-4 font-rethink text-sm text-text-primary">
-                          {product?.name ?? (
-                            <span className="text-text-secondary">Unknown</span>
-                          )}
-                        </td>
-                        <td className="px-5 py-4">
-                          <VerdictBadge verdict={scan.result as ScanVerdict} />
-                        </td>
-                        {/* Scan type icon */}
-                        <td className="px-5 py-4">
-                          {hasCombined ? (
-                            <span title="Barcode + Image">
-                              <Camera
-                                size={15}
-                                strokeWidth={1.8}
-                                className="text-primary"
-                              />
-                            </span>
-                          ) : (
-                            <span title="Barcode only">
-                              <Barcode
-                                size={15}
-                                strokeWidth={1.8}
-                                className="text-text-secondary"
-                              />
-                            </span>
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap px-5 py-4 font-rethink text-sm text-text-secondary">
-                          {formatDate(scan.scanned_at)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      )}
     </main>
   );
 }

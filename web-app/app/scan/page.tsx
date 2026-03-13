@@ -83,12 +83,16 @@ export default function ScanPage() {
 
   // ── Barcode tab ───────────────────────────────────────────
 
+  // Fires immediately when barcode is detected — shows overlay before navigation
+  const handleDetect = useCallback(() => {
+    setIsLookingUp(true);
+  }, []);
+
   const handleScan = useCallback(
     (barcode: string) => {
       const sessionId = crypto.randomUUID();
       const session: BarcodeSession = { sessionId, barcode };
       sessionStorage.setItem(BARCODE_SESSION_KEY, JSON.stringify(session));
-      setIsLookingUp(true);
       router.push(`/result/${encodeURIComponent(barcode)}?sessionId=${sessionId}`);
     },
     [router]
@@ -270,8 +274,10 @@ export default function ScanPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
+              className="flex flex-col gap-8"
             >
-              <Scanner onScan={handleScan} />
+              <Scanner onScan={handleScan} onDetect={handleDetect} />
+              <BarcodeScanDemo />
             </motion.div>
           )}
 
@@ -352,6 +358,143 @@ export default function ScanPage() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Barcode scan demo ──────────────────────────────────────────
+// Animated illustration showing how to hold a product to scan.
+
+function BarcodeScanDemo() {
+  // Barcode bar widths (thin/thick pattern, purely decorative)
+  const bars = [2,1,3,1,2,1,1,3,2,1,2,3,1,1,2,1,3,1,2,1,1,2,3,1,2,1,3,2,1,2];
+  const totalWidth = bars.reduce((a, b) => a + b, 0) + bars.length - 1;
+
+  return (
+    <div className="w-full max-w-sm mx-auto">
+      <p className="mb-3 font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary">
+        How to scan
+      </p>
+
+      {/* Demo frame */}
+      <div
+        className="relative overflow-hidden rounded-2xl border border-border bg-surface"
+        style={{ aspectRatio: "4/3" }}
+      >
+        {/* Soft background */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(135deg, #F7F5F2 0%, #EDE9E4 100%)",
+          }}
+        />
+
+        {/* Product box */}
+        <motion.div
+          className="absolute"
+          style={{
+            width: 120,
+            height: 160,
+            bottom: "12%",
+            left: "50%",
+            x: "-50%",
+            borderRadius: 8,
+            background: "linear-gradient(160deg, #ffffff 0%, #e8e4df 100%)",
+            boxShadow: "0 6px 28px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
+          }}
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {/* Product label stripes */}
+          <div
+            className="absolute left-0 right-0 top-0 rounded-t-lg"
+            style={{ height: 44, backgroundColor: "#1A3C2E", borderRadius: "8px 8px 0 0" }}
+          />
+          <div
+            className="absolute left-3 right-3"
+            style={{ top: 52, height: 8, borderRadius: 4, backgroundColor: "#D5CFC8" }}
+          />
+          <div
+            className="absolute left-5 right-5"
+            style={{ top: 66, height: 6, borderRadius: 3, backgroundColor: "#E0DDD9" }}
+          />
+
+          {/* Barcode on product */}
+          <div
+            className="absolute"
+            style={{ bottom: 18, left: "50%", transform: "translateX(-50%)" }}
+          >
+            <svg width="72" height="32" viewBox={`0 0 ${totalWidth} 24`} aria-hidden>
+              {(() => {
+                let x = 0;
+                return bars.map((w, i) => {
+                  const rect = (
+                    <rect
+                      key={i}
+                      x={x}
+                      y={0}
+                      width={w}
+                      height={24}
+                      fill={i % 2 === 0 ? "#141414" : "transparent"}
+                    />
+                  );
+                  x += w + 1;
+                  return rect;
+                });
+              })()}
+            </svg>
+            <p
+              className="font-mono text-center leading-none"
+              style={{ fontSize: 5, color: "#6B6B6B", marginTop: 3 }}
+            >
+              3606000534032
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Camera viewfinder overlay */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {/* Corner brackets */}
+          {(["tl", "tr", "bl", "br"] as const).map((pos) => {
+            const styles: Record<string, React.CSSProperties> = {
+              tl: { top: "18%", left: "22%", borderTopWidth: 2, borderLeftWidth: 2, borderRadius: "4px 0 0 0" },
+              tr: { top: "18%", right: "22%", borderTopWidth: 2, borderRightWidth: 2, borderRadius: "0 4px 0 0" },
+              bl: { bottom: "18%", left: "22%", borderBottomWidth: 2, borderLeftWidth: 2, borderRadius: "0 0 0 4px" },
+              br: { bottom: "18%", right: "22%", borderBottomWidth: 2, borderRightWidth: 2, borderRadius: "0 0 4px 0" },
+            };
+            return (
+              <div
+                key={pos}
+                className="absolute h-7 w-7"
+                style={{
+                  ...styles[pos],
+                  borderStyle: "solid",
+                  borderColor: "#1A3C2E",
+                  borderWidth: 0,
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Animated scan line */}
+        <motion.div
+          className="absolute left-[23%] right-[23%] h-px"
+          style={{ backgroundColor: "#1A3C2E", opacity: 0.7 }}
+          animate={{ top: ["20%", "80%", "20%"] }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        {/* "Point at barcode" label */}
+        <div
+          className="absolute bottom-0 left-0 right-0 py-2 text-center"
+          style={{ background: "linear-gradient(to top, rgba(247,245,242,0.95) 60%, transparent)" }}
+        >
+          <p className="font-mono text-xs tracking-wider text-text-secondary">
+            Point camera at product barcode
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

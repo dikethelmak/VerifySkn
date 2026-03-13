@@ -13,8 +13,8 @@ const securityHeaders = [
       // Tailwind inline styles + framer-motion
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      // Supabase + Anthropic API calls (server-side only, but kept for fetch())
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.anthropic.com",
+      // Supabase + AI provider API calls (server-side, but kept for fetch())
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.anthropic.com https://generativelanguage.googleapis.com https://api.groq.com https://api.apify.com",
       "img-src 'self' data: blob:",
       "media-src 'self' blob:",
       "object-src 'none'",

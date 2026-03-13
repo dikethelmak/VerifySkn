@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getOBFProductByBarcode } from '@/lib/open-beauty-facts'
 
+// Barcodes: digits and hyphens only, 4–50 chars (covers EAN, UPC, CODE-128/39)
+const BARCODE_RE = /^[\d\-A-Za-z]{4,50}$/
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: { barcode: string } }
 ) {
   const { barcode } = params
+
+  if (!BARCODE_RE.test(barcode)) {
+    return NextResponse.json({ error: 'Invalid barcode' }, { status: 400 })
+  }
+
   const supabase = createClient()
 
   // 1. Check our own products table first

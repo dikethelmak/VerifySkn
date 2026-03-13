@@ -6,6 +6,7 @@ import { getCachedAnalysis, saveAnalysisToCache } from '@/lib/vision-cache'
 import { checkDailyVisionLimit } from '@/lib/vision-rate-limiter'
 import { createClient } from '@/lib/supabase/server'
 import { computeCombinedResult } from '@/lib/scoring'
+import { getSocialIntelligence, formatPatternsForPrompt, applySocialModifier } from '@/lib/social-intelligence'
 import type { ScanVerdict } from '@/lib/database.types'
 
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
@@ -274,6 +275,16 @@ export async function POST(request: NextRequest) {
     const cached = await getCachedAnalysis(barcode, brand)
 
     if (cached) {
+      // Apply social modifier to cached results too — fake report volume
+      // may have grown since the result was originally cached
+      const cachedSocialSignal = await getSocialIntelligence(brand, productId).catch(() => null)
+      const { adjustedConfidence: cachedAdj, socialFlag: cachedFlag } =
+        applySocialModifier(cached.confidence, cachedSocialSignal)
+      if (cachedAdj !== cached.confidence) {
+        cached.confidence = cachedAdj
+        if (cachedFlag) cached.flags = [cachedFlag, ...cached.flags].slice(0, 5)
+      }
+
       // Await so the session_id row exists before we return it to the client
       await saveAnalysisToCache(cached, sessionId, barcode, brand)
 
@@ -307,13 +318,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Fetch social intelligence for this brand in parallel with prompt construction.
+    // Best-effort — never let a social query failure block the scan.
+    const socialSignal = await getSocialIntelligence(brand, productId).catch(() => null)
+    const socialContext = socialSignal ? formatPatternsForPrompt(socialSignal) : ''
+
     // Risk 5: use derived confidence (Fix 5) — never the client-supplied value
     const highConfidence = barcodeConfidence !== null && barcodeConfidence > 70
-    const userPrompt = highConfidence
+    const basePrompt = highConfidence
       ? QUICK_USER_PROMPT(brand, productName)
       : FULL_USER_PROMPT(brand, productName)
+    const userPrompt = basePrompt + socialContext
 
     const analysis = await analysePackaging(image, mimeType, userPrompt)
+
+    // Apply social signal confidence modifier — crowdsourced fake volume
+    // can lower confidence but cannot independently flip the verdict
+    const { adjustedConfidence, socialFlag } = applySocialModifier(
+      analysis.confidence,
+      socialSignal
+    )
+    if (adjustedConfidence !== analysis.confidence) {
+      analysis.confidence = adjustedConfidence
+      if (socialFlag) analysis.flags = [socialFlag, ...analysis.flags].slice(0, 5)
+    }
 
     // Await so the row exists before we return the sessionId to the client
     await saveAnalysisToCache(analysis, sessionId, barcode, brand)

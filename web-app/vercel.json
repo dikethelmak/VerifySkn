@@ -1,6 +1,14 @@
 {
   "crons": [
     {
+      "path": "/api/jobs/scrape",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/jobs/process-social",
+      "schedule": "0 4 * * *"
+    },
+    {
       "path": "/api/jobs/cleanup",
       "schedule": "0 2 * * *"
     }

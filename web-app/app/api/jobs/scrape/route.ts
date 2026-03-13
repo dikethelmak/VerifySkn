@@ -2,9 +2,12 @@ import { timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { runScrapers } from '@/lib/scrapers/job-runner'
-import { redditScraper } from '@/lib/scrapers/reddit'
+import { tiktokScraper }    from '@/lib/scrapers/tiktok'
+import { instagramScraper } from '@/lib/scrapers/instagram'
 
-const ADAPTERS = [redditScraper]
+// Adapters run in parallel (job-runner uses Promise.allSettled).
+// Each adapter self-reports availability so missing env vars gracefully skip.
+const ADAPTERS = [tiktokScraper, instagramScraper]
 
 function verifyCronSecret(request: NextRequest): boolean {
   const secret = request.headers.get('x-cron-secret')
