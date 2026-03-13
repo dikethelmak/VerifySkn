@@ -36,7 +36,7 @@ export default async function HomePage() {
       <section className="bg-primary px-6 py-24 text-white">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="font-fraunces text-5xl font-semibold leading-tight">
-            Know What's Going On Your Skin
+            Know What&apos;s Going On Your Skin
           </h1>
           <p className="mt-5 font-rethink text-lg leading-relaxed text-white/75">
             Instantly verify skincare product authenticity. Scan any barcode —

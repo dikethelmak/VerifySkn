@@ -27,9 +27,15 @@ export function Navbar() {
         {/* ── Wordmark ── */}
         <Link
           href="/"
-          className="font-fraunces text-[22px] font-semibold leading-none text-primary"
+          className="flex items-center gap-2 leading-none"
         >
-          VerifySkn
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <rect width="32" height="32" rx="7" fill="#1A3C2E"/>
+            <polyline points="6,7 16,25 26,7" fill="none" stroke="#C9A84C" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span className="font-fraunces text-[22px] font-semibold text-primary">
+            VerifySkn
+          </span>
         </Link>
 
         {/* ── Desktop links ── */}

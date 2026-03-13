@@ -61,7 +61,7 @@ export function Scanner({ onScan, className }: ScannerProps) {
         // decodeFromVideoDevice resolves once the video stream starts playing.
         // The callback fires on every decoded frame thereafter.
         await reader.decodeFromVideoDevice(
-          undefined, // null → use default camera
+          null, // null → use default camera
           videoRef.current,
           (result) => {
             if (result && !hasDetectedRef.current) {

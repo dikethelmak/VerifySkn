@@ -17,6 +17,8 @@ import type {
   ImageAnalysisInsert,
   CombinedResult,
   CombinedResultInsert,
+  Report,
+  ReportInsert,
   DashboardStats,
 } from "./database.types";
 
@@ -35,6 +37,7 @@ export type {
   DashboardStats,
 } from "./database.types";
 export type { BarcodeSession, ImageAnalysisSession } from "./imageSession";
+export type { Report, ReportInsert, ReportUpvote } from "./database.types";
 
 // ── Client factories ─────────────────────────────────────────
 
@@ -100,7 +103,7 @@ export async function getProductByBarcode(
     return null;
   }
 
-  return data;
+  return data as unknown as Product;
 }
 
 /**
@@ -122,7 +125,7 @@ export async function logScan(
     return null;
   }
 
-  return data;
+  return data as unknown as ScanLog;
 }
 
 /**
@@ -230,7 +233,7 @@ export async function saveImageAnalysis(
     return null;
   }
 
-  return data;
+  return data as unknown as ImageAnalysis;
 }
 
 /**
@@ -253,7 +256,7 @@ export async function saveCombinedResult(
     return null;
   }
 
-  return data;
+  return data as unknown as CombinedResult;
 }
 
 /**
@@ -279,5 +282,93 @@ export async function getCombinedResultBySession(
     return null;
   }
 
-  return data;
+  return data as unknown as CombinedResult;
+}
+
+// ── Reporting helpers ────────────────────────────────────────
+
+/**
+ * Submit a community report to the reports table.
+ */
+export async function submitReport(
+  entry: ReportInsert
+): Promise<Report | null> {
+  const supabase = createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("reports")
+    .insert(entry)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[submitReport]", error.message);
+    return null;
+  }
+
+  return data as unknown as Report;
+}
+
+/**
+ * Upvote a report (server-side). Returns true on success.
+ */
+export async function upvoteReport(
+  reportId: string,
+  userId: string
+): Promise<boolean> {
+  const supabase = createSupabaseServerClient();
+
+  const { error } = await supabase
+    .from("report_upvotes")
+    .insert({ report_id: reportId, user_id: userId });
+
+  if (error) {
+    console.error("[upvoteReport]", error.message);
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Fetch all non-dismissed reports for a given barcode.
+ */
+export async function getReportsForProduct(
+  barcode: string
+): Promise<Report[]> {
+  const supabase = createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("reports")
+    .select("*")
+    .eq("barcode", barcode)
+    .neq("status", "dismissed")
+    .order("upvotes", { ascending: false });
+
+  if (error) {
+    console.error("[getReportsForProduct]", error.message);
+    return [];
+  }
+
+  return (data ?? []) as unknown as Report[];
+}
+
+/**
+ * Fetch all reports submitted by a specific user.
+ */
+export async function getUserReports(userId: string): Promise<Report[]> {
+  const supabase = createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("reports")
+    .select("*")
+    .eq("reporter_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[getUserReports]", error.message);
+    return [];
+  }
+
+  return (data ?? []) as unknown as Report[];
 }

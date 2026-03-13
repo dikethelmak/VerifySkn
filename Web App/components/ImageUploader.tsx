@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type FileRejection } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUp, X } from "lucide-react";
 import { Button } from "@/components/Button";
@@ -71,7 +71,7 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
   }, []);
 
   const handleRejection = useCallback(
-    (rejections: { errors: { code: string }[] }[]) => {
+    (rejections: FileRejection[]) => {
       const code = rejections[0]?.errors[0]?.code;
       if (code === "file-too-large") {
         setError("File exceeds the 10 MB limit.");
@@ -117,15 +117,17 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
             transition={{ duration: 0.18 }}
           >
             <motion.div
-              {...getRootProps()}
               animate={{
                 borderColor: isDragActive ? "#1A3C2E" : "#E5E2DD",
                 backgroundColor: isDragActive ? "#F0F7F4" : "#FFFFFF",
               }}
               transition={{ duration: 0.15 }}
               style={{ borderRadius: 12, borderWidth: 2, borderStyle: "dashed" }}
-              className="flex cursor-pointer flex-col items-center justify-center gap-3 px-6 py-12 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
+              <div
+                {...getRootProps()}
+                className="flex cursor-pointer flex-col items-center justify-center gap-3 px-6 py-12 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
               <input {...getInputProps()} />
 
               {/* Icon */}
@@ -157,6 +159,7 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
               <p className="font-mono text-xs text-text-secondary">
                 JPEG · PNG · WebP · max 10 MB
               </p>
+              </div>
             </motion.div>
           </motion.div>
         )}
