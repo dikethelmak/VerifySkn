@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { ReportButton } from "@/components/ReportButton";
 import { motion } from "framer-motion";
 import { TriangleAlert } from "lucide-react";
 import { ResultHero } from "@/components/ResultHero";
@@ -38,14 +39,14 @@ const BADGE_CONFIG: Record<
   CheckBadge,
   { label: string; bg: string; color: string }
 > = {
-  pass:      { label: "Pass",      bg: "#2D7A4F", color: "#FFFFFF" },
-  fail:      { label: "Fail",      bg: "#C0392B", color: "#FFFFFF" },
-  uncertain: { label: "Uncertain", bg: "#E07B2A", color: "#FFFFFF" },
-  na:        { label: "N/A",       bg: "#E5E2DD", color: "#6B6B6B" },
+  pass:      { label: "Pass",      bg: "#7dc98a",              color: "#0b1e0f" },
+  fail:      { label: "Fail",      bg: "#C0392B",              color: "#FFFFFF" },
+  uncertain: { label: "Uncertain", bg: "#E07B2A",              color: "#FFFFFF" },
+  na:        { label: "N/A",       bg: "rgba(255,255,255,0.09)", color: "rgba(238,236,234,0.5)" },
 };
 
 const VERDICT_COLOR: Record<ScanVerdict, string> = {
-  authentic:  "#2D7A4F",
+  authentic:  "#7dc98a",
   unverified: "#E07B2A",
   suspicious: "#C0392B",
 };
@@ -73,8 +74,8 @@ function CheckCard({ label, badge }: { label: string; badge: CheckBadge }) {
   const { label: badgeLabel, bg, color } = BADGE_CONFIG[badge];
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm" style={{ borderRadius: 14 }}>
-      <p className="font-rethink text-sm font-semibold text-text-primary">{label}</p>
-      <span className="w-fit rounded-full px-2.5 py-0.5 font-rethink text-xs font-medium" style={{ backgroundColor: bg, color }}>
+      <p className="font-syne text-sm font-semibold text-text-primary">{label}</p>
+      <span className="w-fit rounded-full px-2.5 py-0.5 font-syne text-xs font-medium" style={{ backgroundColor: bg, color }}>
         {badgeLabel}
       </span>
     </div>
@@ -84,13 +85,13 @@ function CheckCard({ label, badge }: { label: string; badge: CheckBadge }) {
 function FlagsSection({ flags }: { flags: string[] }) {
   if (flags.length === 0) return null;
   return (
-    <div className="rounded-xl p-4" style={{ backgroundColor: "#FDF2F2", borderRadius: 12 }}>
-      <p className="mb-3 font-rethink text-sm font-semibold" style={{ color: "#C0392B" }}>Issues Detected</p>
+    <div className="rounded-xl p-4" style={{ backgroundColor: "rgba(192,57,43,0.1)", borderRadius: 12 }}>
+      <p className="mb-3 font-syne text-sm font-semibold" style={{ color: "#C0392B" }}>Issues Detected</p>
       <ul className="flex flex-col gap-2">
         {flags.map((flag, i) => (
           <li key={i} className="flex items-start gap-2">
             <TriangleAlert size={14} strokeWidth={2} className="mt-0.5 shrink-0" style={{ color: "#C0392B" }} />
-            <span className="font-rethink text-sm font-normal text-text-primary">{flag}</span>
+            <span className="font-syne text-sm font-normal text-text-primary">{flag}</span>
           </li>
         ))}
       </ul>
@@ -102,12 +103,12 @@ function ConfidenceBar({ label, value, delay }: { label: string; value: number; 
   return (
     <div className="flex-1">
       <div className="mb-1.5 flex items-center justify-between">
-        <span className="font-rethink text-xs text-text-secondary">{label}</span>
+        <span className="font-syne text-xs text-text-secondary">{label}</span>
         <span className="font-mono text-xs text-text-primary">{value}%</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full" style={{ backgroundColor: "#E5E2DD" }}>
+      <div className="h-2 overflow-hidden rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
         <motion.div
-          className="h-full rounded-full bg-primary"
+          className="h-full rounded-full bg-lime"
           initial={{ width: 0 }}
           animate={{ width: `${value}%` }}
           transition={{ duration: 0.7, delay, ease: "easeOut" }}
@@ -125,7 +126,7 @@ function CombinedSection({ barcodeConfidence, imageConfidence, finalResult, fina
 }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm" style={{ borderRadius: 16 }}>
-      <p className="mb-4 font-rethink text-sm font-semibold text-text-primary">Combined Analysis</p>
+      <p className="mb-4 font-syne text-sm font-semibold text-text-primary">Combined Analysis</p>
       <div className="flex gap-5">
         <ConfidenceBar label="Barcode" value={barcodeConfidence} delay={0.1} />
         <ConfidenceBar label="Image"   value={imageConfidence}   delay={0.25} />
@@ -140,9 +141,9 @@ function CombinedSection({ barcodeConfidence, imageConfidence, finalResult, fina
         >
           {finalConfidence}%
         </motion.span>
-        <span className="mb-1 font-rethink text-sm capitalize text-text-secondary">{finalResult}</span>
+        <span className="mb-1 font-syne text-sm capitalize text-text-secondary">{finalResult}</span>
       </div>
-      <p className="mt-1.5 font-rethink text-[13px] text-text-secondary">
+      <p className="mt-1.5 font-syne text-[13px] text-text-secondary">
         Based on barcode verification and packaging analysis
       </p>
     </div>
@@ -153,17 +154,17 @@ function ActionButtons() {
   return (
     <div className="flex flex-col gap-3 pt-2 sm:flex-row">
       <Link
-        href="/scan"
-        className={cn("flex flex-1 items-center justify-center rounded-xl px-6 py-3", "bg-primary font-rethink text-base font-medium text-white", "transition-colors hover:bg-primary/90 active:scale-[0.98]")}
+        href="/"
+        className={cn("flex flex-1 items-center justify-center rounded-xl px-6 py-3", "font-syne text-base font-medium text-[#0b1e0f]", "transition-colors active:scale-[0.98]")}
+        style={{ backgroundColor: "#7dc98a" }}
       >
         Scan Another Product
       </Link>
-      <Link
-        href="/report"
-        className={cn("flex flex-1 items-center justify-center rounded-xl border px-6 py-3", "border-primary font-rethink text-base font-medium text-primary", "transition-colors hover:bg-primary/5 active:scale-[0.98]")}
-      >
-        Report This Product
-      </Link>
+      <ReportButton
+        label="Report This Product"
+        className={cn("flex flex-1 items-center justify-center rounded-xl border px-6 py-3", "font-syne text-base font-medium text-lime", "transition-colors active:scale-[0.98]")}
+        style={{ borderColor: "rgba(125,201,138,0.35)", background: "transparent", cursor: "pointer" }}
+      />
     </div>
   );
 }
@@ -171,7 +172,7 @@ function ActionButtons() {
 function LoadingSpinner() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-primary border-t-transparent" aria-label="Loading…" />
+      <div className="h-9 w-9 animate-spin rounded-full border-[3px] border-lime border-t-transparent" aria-label="Loading…" />
     </div>
   );
 }
@@ -188,7 +189,7 @@ function ImageResultContent() {
 
   useEffect(() => {
     if (!sessionId) {
-      router.replace("/scan");
+      router.replace("/");
       return;
     }
 
@@ -245,7 +246,7 @@ function ImageResultContent() {
       }
 
       if (!analysis) {
-        router.replace("/scan");
+        router.replace("/");
         return;
       }
 
@@ -285,7 +286,7 @@ function ImageResultContent() {
       setReady(true);
     }
 
-    load().catch(() => router.replace("/scan"));
+    load().catch(() => router.replace("/"));
   }, [sessionId, router]);
 
   if (!ready || !data) return <LoadingSpinner />;
@@ -299,9 +300,9 @@ function ImageResultContent() {
     <main className="min-h-screen bg-background">
       <ResultHero verdict={data.result} confidence={data.confidence} summary={data.summary || undefined} />
 
-      <div className="mx-auto max-w-lg space-y-4 px-5 py-8">
+      <div className="mx-auto max-w-lg space-y-4 px-8 py-8">
         <section>
-          <h2 className="mb-3 font-rethink text-sm font-semibold uppercase tracking-widest text-text-secondary">
+          <h2 className="mb-3 font-syne text-sm font-semibold uppercase tracking-widest text-text-secondary">
             Packaging Checks
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

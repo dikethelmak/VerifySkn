@@ -118,8 +118,8 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
           >
             <motion.div
               animate={{
-                borderColor: isDragActive ? "#1A3C2E" : "#E5E2DD",
-                backgroundColor: isDragActive ? "#F0F7F4" : "#FFFFFF",
+                borderColor: isDragActive ? "#7dc98a" : "rgba(255,255,255,0.12)",
+                backgroundColor: isDragActive ? "rgba(125,201,138,0.06)" : "transparent",
               }}
               transition={{ duration: 0.15 }}
               style={{ borderRadius: 12, borderWidth: 2, borderStyle: "dashed" }}
@@ -140,18 +140,18 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
                   strokeWidth={1.5}
                   className={cn(
                     "transition-colors",
-                    isDragActive ? "text-primary" : "text-text-secondary"
+                    isDragActive ? "text-lime" : "text-text-secondary"
                   )}
                 />
               </motion.div>
 
               {/* Primary label */}
-              <p className="font-rethink text-base font-medium text-text-primary">
+              <p className="font-syne text-base font-medium text-text-primary">
                 {isDragActive ? "Drop your photo here" : "Drag your product photo here"}
               </p>
 
               {/* Secondary label */}
-              <p className="font-rethink text-sm font-normal text-text-secondary">
+              <p className="font-syne text-sm font-normal text-text-secondary">
                 or click to browse
               </p>
 
@@ -176,14 +176,14 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
           >
             {/* Image preview */}
             <div
-              style={{ borderRadius: 12, borderWidth: 1, borderStyle: "solid", borderColor: "#E5E2DD" }}
-              className="relative overflow-hidden bg-[#F7F5F2]"
+              style={{ borderRadius: 12, borderWidth: 1, borderStyle: "solid", borderColor: "rgba(255,255,255,0.09)" }}
+              className="relative overflow-hidden bg-surface"
             >
               {/* Remove button */}
               <button
                 onClick={handleRemove}
                 aria-label="Remove image"
-                className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-text-secondary shadow-sm transition-colors hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-text-secondary shadow-sm transition-colors hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime"
               >
                 <X size={14} strokeWidth={2} />
               </button>
@@ -210,7 +210,7 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
               <div className="flex shrink-0 items-center gap-4">
                 <button
                   onClick={handleRemove}
-                  className="font-rethink text-sm font-medium text-danger hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50 focus-visible:ring-offset-1"
+                  className="font-syne text-sm font-medium text-danger hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50 focus-visible:ring-offset-1"
                 >
                   Remove
                 </button>
@@ -232,7 +232,7 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="mt-2 font-rethink text-sm text-danger"
+            className="mt-2 font-syne text-sm text-danger"
           >
             {error}
           </motion.p>

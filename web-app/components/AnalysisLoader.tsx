@@ -42,7 +42,7 @@ function ScanningGraphic() {
             stroke="#1A3C2E" strokeWidth="1.5" fill="none"
           />
           {/* Label background */}
-          <rect x="17" y="30" width="46" height="52" rx="3" fill="#F7F5F2" />
+          <rect x="17" y="30" width="46" height="52" rx="3" fill="#1d3826" />
           {/* Brand name bar (accent gold) */}
           <rect x="23" y="38" width="34" height="5" rx="2.5" fill="#C9A84C" opacity="0.55" />
           {/* Simulated text lines */}
@@ -61,8 +61,8 @@ function ScanningGraphic() {
             width: 62,
             height: 2,
             borderRadius: 1,
-            backgroundColor: "rgba(26, 60, 46, 0.6)",
-            boxShadow: "0 0 8px rgba(26, 60, 46, 0.4)",
+            backgroundColor: "rgba(125, 201, 138, 0.7)",
+            boxShadow: "0 0 8px rgba(125, 201, 138, 0.4)",
           }}
           animate={{ top: [6, 102, 6] }}
           transition={{
@@ -115,12 +115,12 @@ function StepRow({ label, isActive, isCompleted, isVisible }: StepRowProps) {
                 scale: { duration: 1.1, repeat: Infinity, ease: "easeInOut" },
                 opacity: { duration: 1.1, repeat: Infinity, ease: "easeInOut" },
               }}
-              className="h-2 w-2 rounded-full bg-primary"
+              className="h-2 w-2 rounded-full bg-lime"
             />
           ) : (
             <motion.div
               key="idle"
-              className="h-1.5 w-1.5 rounded-full bg-border"
+              className="h-1.5 w-1.5 rounded-full" style={{ background: "rgba(125,201,138,0.2)" }}
             />
           )}
         </AnimatePresence>
@@ -128,9 +128,9 @@ function StepRow({ label, isActive, isCompleted, isVisible }: StepRowProps) {
 
       {/* Label — framer-motion animates the color value directly */}
       <motion.span
-        className="font-rethink text-sm"
+        className="font-syne text-sm"
         animate={{
-          color: isActive ? "#141414" : "#6B6B6B",
+          color: isActive ? "#eeecea" : "rgba(238,236,234,0.45)",
         }}
         style={{ fontWeight: isActive ? 500 : 400 }}
         transition={{ duration: 0.2 }}
@@ -179,8 +179,8 @@ export function AnalysisLoader({ onComplete }: AnalysisLoaderProps) {
         style={{
           borderRadius: 16,
           padding: 24,
-          backgroundColor: "#FFFFFF",
-          boxShadow: "0 4px 24px rgba(0, 0, 0, 0.08)",
+          backgroundColor: "#172c1d",
+          boxShadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
         }}
         className="flex flex-col gap-6"
       >

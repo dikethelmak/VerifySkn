@@ -31,20 +31,20 @@ export async function ClaudeAnalysis({
       {/* Header */}
       <div className="mb-4 flex items-center gap-2">
         <SparkleIcon className="h-4 w-4 text-accent" />
-        <p className="font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary">
+        <p className="font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">
           AI Analysis
         </p>
       </div>
 
       {/* Summary */}
-      <p className="font-rethink text-[15px] leading-relaxed text-text-primary">
+      <p className="font-syne text-[15px] leading-relaxed text-text-primary">
         {analysis.summary}
       </p>
 
       {/* Flags */}
       {analysis.flags.length > 0 && (
         <div className="mt-5">
-          <p className="mb-3 font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary">
+          <p className="mb-3 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">
             Check these on your packaging
           </p>
           <ul className="space-y-2.5">
@@ -54,7 +54,7 @@ export async function ClaudeAnalysis({
                   className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full"
                   style={{ backgroundColor: "#C9A84C" }}
                 />
-                <span className="font-rethink text-sm leading-snug text-text-primary">
+                <span className="font-syne text-sm leading-snug text-text-primary">
                   {flag}
                 </span>
               </li>
@@ -65,7 +65,7 @@ export async function ClaudeAnalysis({
 
       {/* Recommendation */}
       {analysis.recommendation && (
-        <p className="mt-5 border-t border-border pt-4 font-rethink text-sm italic text-text-secondary">
+        <p className="mt-5 border-t border-border pt-4 font-syne text-sm italic text-text-secondary">
           {analysis.recommendation}
         </p>
       )}

@@ -16,6 +16,8 @@ export interface ScannerProps {
   onScan: (barcode: string) => void;
   onDetect?: () => void;
   className?: string;
+  /** Pass false to hide the manual-entry fallback input (default: true) */
+  showManualEntry?: boolean;
 }
 
 // ── Constants ────────────────────────────────────────────────
@@ -25,7 +27,7 @@ const SUCCESS = "#2D7A4F";
 
 // ── Scanner ──────────────────────────────────────────────────
 
-export function Scanner({ onScan, onDetect, className }: ScannerProps) {
+export function Scanner({ onScan, onDetect, className, showManualEntry = true }: ScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<{ reset: () => void } | null>(null);
   // Stable refs so zxing callbacks always call the latest handlers
@@ -201,11 +203,13 @@ export function Scanner({ onScan, onDetect, className }: ScannerProps) {
       </AnimatePresence>
 
       {/* ── Manual entry fallback ── */}
-      <ManualEntry
-        value={manualInput}
-        onChange={setManualInput}
-        onSubmit={handleManualSubmit}
-      />
+      {showManualEntry && (
+        <ManualEntry
+          value={manualInput}
+          onChange={setManualInput}
+          onSubmit={handleManualSubmit}
+        />
+      )}
     </div>
   );
 }

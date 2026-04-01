@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "color-accessibility": {
+      "source": "aj-geddes/useful-ai-prompts",
+      "sourceType": "github",
+      "computedHash": "578e8cd1db50efb2f521fa8602bd4bda02d18104bfc9e5c842d2ed56adebb7b7"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+    }
+  }
+}

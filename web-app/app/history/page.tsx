@@ -54,12 +54,12 @@ export default async function HistoryPage({ searchParams }: PageProps) {
   const hasAnyLogs = (count ?? 0) > 0;
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-12">
+    <div className="mx-auto max-w-5xl px-8 py-12">
       {/* Heading */}
-      <h1 className="font-fraunces text-4xl font-semibold text-text-primary">
+      <h1 className="font-syne text-4xl font-semibold text-text-primary">
         Scan History
       </h1>
-      <p className="mt-1 font-rethink text-sm text-text-secondary">
+      <p className="mt-1 font-syne text-sm text-text-secondary">
         {count ?? 0} total scan{count !== 1 ? "s" : ""}
       </p>
 
@@ -73,13 +73,14 @@ export default async function HistoryPage({ searchParams }: PageProps) {
         />
       ) : (
         <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-border bg-surface px-5 py-20 text-center shadow-sm">
-          <p className="font-fraunces text-xl text-text-secondary">No scans yet</p>
-          <p className="mt-2 font-rethink text-sm text-text-secondary">
+          <p className="font-syne text-xl text-text-secondary">No scans yet</p>
+          <p className="mt-2 font-syne text-sm text-text-secondary">
             Head to the scan page to verify your first product.
           </p>
           <Link
-            href="/scan"
-            className="mt-6 rounded-xl bg-primary px-6 py-2.5 font-rethink text-sm font-medium text-white transition-colors hover:bg-primary/90"
+            href="/"
+            className="mt-6 rounded-xl px-6 py-2.5 font-syne text-sm font-medium text-[#0b1e0f] transition-colors"
+            style={{ backgroundColor: "#7dc98a" }}
           >
             Scan a Product
           </Link>

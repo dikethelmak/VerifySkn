@@ -1,0 +1,1125 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+import { useDropzone } from "react-dropzone";
+import { X } from "lucide-react";
+import { Scanner } from "@/components/Scanner";
+import {
+  IMAGE_SESSION_KEY,
+  type ImageAnalysisSession,
+} from "@/lib/imageSession";
+
+type Tab   = "serial" | "deep";
+type Phase = "idle" | "scanning" | "loading" | "result" | "not-found";
+type UploadPhase = "idle" | "analyzing" | "error";
+type ReportIssue = "counterfeit" | "mislabelled" | "wrong_info" | "other";
+
+const REPORT_ISSUES: { value: ReportIssue; label: string }[] = [
+  { value: "counterfeit", label: "Counterfeit / Fake" },
+  { value: "mislabelled", label: "Mislabelled Packaging" },
+  { value: "wrong_info",  label: "Wrong Information" },
+  { value: "other",       label: "Other" },
+];
+
+// Dynamic imports (browser-only)
+const ImageUploader = dynamic(
+  () => import("@/components/ImageUploader").then((m) => ({ default: m.ImageUploader })),
+  {
+    ssr: false,
+    loading: () => (
+      <div style={{ height: 180, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(238,236,234,0.3)", fontSize: "13px" }}>
+        Loading…
+      </div>
+    ),
+  }
+);
+
+const AnalysisLoader = dynamic(
+  () => import("@/components/AnalysisLoader").then((m) => ({ default: m.AnalysisLoader })),
+  { ssr: false }
+);
+
+// ── Palette ───────────────────────────────────────────────────
+const C = {
+  forestDeep:  "#0b1e0f",
+  forest:      "#0b1e0f",
+  forestMid:   "#0f2614",
+  forestLight: "#162d1c",
+  lime:        "#7dc98a",
+  limeDim:     "rgba(125,201,138,0.12)",
+  limeBorder:  "rgba(125,201,138,0.25)",
+  border:      "rgba(255,255,255,0.07)",
+  w60:         "rgba(255,255,255,0.6)",
+  w40:         "rgba(255,255,255,0.4)",
+  w25:         "rgba(255,255,255,0.25)",
+  w15:         "rgba(255,255,255,0.15)",
+  w08:         "rgba(255,255,255,0.08)",
+  w04:         "rgba(255,255,255,0.04)",
+  amber:       "rgba(255,193,7,0.85)",
+  amberBg:     "rgba(255,193,7,0.06)",
+  amberBorder: "rgba(255,193,7,0.18)",
+  red:         "rgba(255,90,80,0.85)",
+  redBg:       "rgba(255,90,80,0.06)",
+  redBorder:   "rgba(255,90,80,0.2)",
+} as const;
+
+const UI   = "var(--font-syne,   var(--font-rethink))";
+const MONO = "var(--font-dm-mono, var(--font-mono))";
+
+// ── Decorative barcode bars ───────────────────────────────────
+const BARS = [2,1,3,1,2,4,1,2,1,3,2,1,4,1,2,3,1,2,1,3,2,1,4,1,2,3,1,1,2,4,1,3,2,1,1,2]
+  .map((w, i) => ({ w, op: +(0.10 + ((i * 7) % 5) * 0.04).toFixed(2) }));
+
+// ── Serial code formatter ─────────────────────────────────────
+function fmt(raw: string): string {
+  const v = raw.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  // Pure numeric → barcode (EAN-8/12/13), no dashes, up to 13 digits
+  if (/^\d+$/.test(v)) return v.slice(0, 13);
+  // Alphanumeric → serial code XXX-XXX-XXXX, up to 10 chars
+  const s = v.slice(0, 10);
+  if (s.length > 6) return `${s.slice(0,3)}-${s.slice(3,6)}-${s.slice(6)}`;
+  if (s.length > 3) return `${s.slice(0,3)}-${s.slice(3)}`;
+  return s;
+}
+
+// ── Types ─────────────────────────────────────────────────────
+interface ProductData {
+  name?:         string;
+  product_name?: string;
+  brand?:        string;
+  barcode?:      string;
+  category?:     string;
+  categories?:   string;
+  source:        "database" | "open_beauty_facts" | "not_found";
+}
+
+interface ReportImage {
+  preview:  string;
+  base64:   string;
+  mimeType: string;
+  name:     string;
+}
+
+interface DeepResult {
+  result:          string;
+  confidence:      number;
+  summary:         string;
+  flags:           string[];
+  font_quality:    string;
+  logo_accuracy:   string;
+  print_quality:   string;
+  label_alignment: string;
+  spelling_check:  string;
+  hologram_check:  string;
+  sessionId:       string;
+}
+
+// ── Deep analysis check helpers ───────────────────────────────
+type CheckBadge = "pass" | "fail" | "uncertain" | "na";
+
+function normalizeCheck(value: string): CheckBadge {
+  if (!value || value.trim() === "" || /^n\/?a$/i.test(value.trim())) return "na";
+  const lower = value.toLowerCase();
+  if (/\b(good|excellent|pass|clear|correct|verified|present|accurate|aligned|consistent|authentic|no error|no issue|legitimate|standard|proper|high|sharp)\b/.test(lower)) return "pass";
+  if (/\b(poor|bad|fail|missing|incorrect|blurry|misaligned|error|suspicious|counterfeit|tampered|inconsistent|absent|wrong|invalid|not present|low quality|smudged)\b/.test(lower)) return "fail";
+  return "uncertain";
+}
+
+const BADGE_CFG: Record<CheckBadge, { label: string; bg: string; color: string }> = {
+  pass:      { label: "Pass",      bg: "rgba(125,201,138,0.15)", color: "#7dc98a" },
+  fail:      { label: "Fail",      bg: "rgba(255,90,80,0.15)",   color: "rgba(255,90,80,0.9)" },
+  uncertain: { label: "Uncertain", bg: "rgba(255,193,7,0.12)",   color: "rgba(255,193,7,0.8)" },
+  na:        { label: "N/A",       bg: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.3)" },
+};
+
+const DEEP_CHECKS: { key: keyof Pick<DeepResult, "font_quality"|"logo_accuracy"|"print_quality"|"label_alignment"|"spelling_check"|"hologram_check">; label: string }[] = [
+  { key: "font_quality",    label: "Font Quality"    },
+  { key: "logo_accuracy",   label: "Logo Accuracy"   },
+  { key: "print_quality",   label: "Print Quality"   },
+  { key: "label_alignment", label: "Label Alignment" },
+  { key: "spelling_check",  label: "Spelling"        },
+  { key: "hologram_check",  label: "Hologram"        },
+];
+
+const VERDICT_COLORS: Record<string, string> = {
+  authentic:  "#7dc98a",
+  unverified: "rgba(255,193,7,0.85)",
+  suspicious: "rgba(255,90,80,0.9)",
+};
+
+// ── Report Modal ──────────────────────────────────────────────
+
+interface ReportModalProps {
+  barcode:         string;
+  onClose:         () => void;
+  prefillIssues?:  ReportIssue[];
+  prefillDesc?:    string;
+}
+
+function ReportModal({ barcode: initialBarcode, onClose, prefillIssues = [], prefillDesc = "" }: ReportModalProps) {
+  const [barcode,     setBarcode]     = useState(initialBarcode);
+  const [images,      setImages]      = useState<ReportImage[]>([]);
+  const [issues,      setIssues]      = useState<ReportIssue[]>(prefillIssues);
+  const [description, setDescription] = useState(prefillDesc);
+  const [submitting,  setSubmitting]  = useState(false);
+  const [success,     setSuccess]     = useState(false);
+  const [error,       setError]       = useState<string | null>(null);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      if (!file || images.length >= 3) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        setImages((prev) => [
+          ...prev,
+          { preview: dataUrl, base64: dataUrl.split(",")[1], mimeType: file.type, name: file.name },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    },
+    accept: { "image/jpeg": [], "image/png": [], "image/webp": [] },
+    maxFiles: 1,
+    disabled: images.length >= 3,
+  });
+
+  function toggleIssue(issue: ReportIssue) {
+    setIssues((prev) =>
+      prev.includes(issue) ? prev.filter((i) => i !== issue) : [...prev, issue]
+    );
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (submitting || issues.length === 0) return;
+    setSubmitting(true);
+    setError(null);
+
+    const res = await fetch("/api/report", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ barcode: barcode.trim(), images, issues, description: description.trim() }),
+    });
+    setSubmitting(false);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Failed to submit — please try again.");
+      return;
+    }
+    setSuccess(true);
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)",
+        display: "flex", alignItems: "flex-start", justifyContent: "center",
+        padding: "48px 16px 32px", overflowY: "auto",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: C.forestMid, border: `0.5px solid ${C.border}`,
+          borderRadius: "16px", padding: "28px",
+          width: "100%", maxWidth: "480px", fontFamily: UI, color: "#fff",
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+          <h2 style={{ fontSize: "18px", fontWeight: 600, margin: 0, letterSpacing: "-0.02em" }}>
+            {success ? "Report submitted" : "Report a product"}
+          </h2>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{ background: "none", border: "none", cursor: "pointer", color: C.w40, padding: 4 }}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {success ? (
+          <div style={{ textAlign: "center", padding: "24px 0" }}>
+            <p style={{ color: C.lime, fontSize: "14px", marginBottom: "16px" }}>
+              ✓ Thank you — your report has been received.
+            </p>
+            <button
+              onClick={onClose}
+              style={{
+                background: C.limeDim, border: `0.5px solid ${C.limeBorder}`,
+                color: C.lime, borderRadius: "8px", padding: "8px 20px",
+                fontSize: "13px", cursor: "pointer", fontFamily: UI,
+              }}
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+
+            {/* Barcode */}
+            <div>
+              <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.w25, fontFamily: MONO, marginBottom: "6px" }}>
+                Barcode
+              </label>
+              <input
+                type="text"
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                placeholder="e.g. 5000167227218"
+                style={{
+                  width: "100%", background: C.w04, border: `0.5px solid ${C.w15}`,
+                  borderRadius: "8px", padding: "10px 14px", fontSize: "13px",
+                  color: C.w60, fontFamily: MONO, outline: "none", boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {/* Photos */}
+            <div>
+              <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.w25, fontFamily: MONO, marginBottom: "6px" }}>
+                Photos (optional)
+              </label>
+              {images.length > 0 && (
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                  {images.map((img, i) => (
+                    <div key={i} style={{ position: "relative" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.preview}
+                        alt={img.name}
+                        style={{ width: "64px", height: "64px", objectFit: "cover", borderRadius: "8px", border: `0.5px solid ${C.w15}` }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
+                        aria-label="Remove image"
+                        style={{
+                          position: "absolute", top: "-6px", right: "-6px",
+                          width: "18px", height: "18px", borderRadius: "50%",
+                          background: C.red, border: "none", cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}
+                      >
+                        <X size={10} color="#fff" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {images.length < 3 && (
+                <div
+                  {...getRootProps()}
+                  style={{
+                    border: `0.5px dashed ${isDragActive ? C.lime : C.w15}`,
+                    borderRadius: "8px", padding: "16px", textAlign: "center",
+                    cursor: "pointer", background: isDragActive ? C.limeDim : C.w04,
+                  }}
+                >
+                  <input {...getInputProps()} />
+                  <p style={{ fontSize: "12px", color: C.w40 }}>
+                    {isDragActive ? "Drop here…" : "Drag an image or click to upload"}
+                  </p>
+                  <p style={{ fontSize: "11px", color: C.w25, fontFamily: MONO, marginTop: "4px" }}>
+                    JPEG · PNG · WebP · up to 3 photos
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Issues */}
+            <div>
+              <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.w25, fontFamily: MONO, marginBottom: "8px" }}>
+                Issues
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                {REPORT_ISSUES.map((issue) => (
+                  <button
+                    key={issue.value}
+                    type="button"
+                    onClick={() => toggleIssue(issue.value)}
+                    style={{
+                      borderRadius: "999px", padding: "6px 14px", fontSize: "12px",
+                      cursor: "pointer", fontFamily: UI,
+                      border: `0.5px solid ${issues.includes(issue.value) ? C.limeBorder : C.w15}`,
+                      background: issues.includes(issue.value) ? C.limeDim : "transparent",
+                      color: issues.includes(issue.value) ? C.lime : C.w40,
+                    }}
+                  >
+                    {issue.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.08em", color: C.w25, fontFamily: MONO, marginBottom: "6px" }}>
+                Description (optional)
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Describe what made this product suspicious…"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                style={{
+                  width: "100%", background: C.w04, border: `0.5px solid ${C.w15}`,
+                  borderRadius: "8px", padding: "10px 14px", fontSize: "13px",
+                  color: C.w60, fontFamily: UI, resize: "none", outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {error && (
+              <p style={{ fontSize: "12px", color: C.red, fontFamily: MONO }}>{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={issues.length === 0 || submitting}
+              style={{
+                width: "100%", background: C.lime, color: C.forestDeep,
+                border: "none", borderRadius: "8px", padding: "11px",
+                fontSize: "13px", fontWeight: 600,
+                cursor: issues.length === 0 || submitting ? "default" : "pointer",
+                opacity: issues.length === 0 || submitting ? 0.45 : 1,
+                fontFamily: UI,
+              }}
+            >
+              {submitting ? "Submitting…" : "Submit report"}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── PDF report generator ─────────────────────────────────────
+
+async function downloadDeepReport(r: DeepResult) {
+  const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
+    import("jspdf"),
+    import("html2canvas"),
+  ]);
+
+  await document.fonts.ready;
+
+  const verdictColor = VERDICT_COLORS[r.result] ?? "#7dc98a";
+
+  const checksHtml = DEEP_CHECKS.map(({ key, label }) => {
+    const badge = normalizeCheck(r[key] as string);
+    const { label: badgeLabel, bg, color } = BADGE_CFG[badge];
+    return `
+      <div style="background:${bg};border-radius:8px;padding:14px 12px;min-width:0">
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:6px;font-family:inherit">${label}</div>
+        <div style="font-size:11px;font-weight:600;color:${color};font-family:inherit">${badgeLabel}</div>
+      </div>`;
+  }).join("");
+
+  const flagsHtml = r.flags.length > 0 ? `
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.07)">
+      <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:rgba(255,255,255,0.25);margin-bottom:12px;text-transform:uppercase;font-family:'DM Mono','Space Mono',monospace">Issues Detected</div>
+      ${r.flags.map(f => `
+        <div style="display:flex;gap:8px;font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:7px;align-items:flex-start;font-family:inherit;line-height:1.5">
+          <span style="color:rgba(255,90,80,0.9);flex-shrink:0;margin-top:1px">›</span><span>${f}</span>
+        </div>`).join("")}
+    </div>` : "";
+
+  const el = document.createElement("div");
+  el.style.cssText = `
+    position:fixed;top:-99999px;left:0;
+    width:794px;padding:48px;
+    background:#0b1e0f;color:#fff;
+    font-family:'Syne','Rethink Sans',sans-serif;
+    box-sizing:border-box;line-height:1.5;
+  `;
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <span style="font-size:19px;font-weight:600;letter-spacing:-0.04em;font-family:inherit">.verify<span style="color:#7dc98a">skn</span></span>
+      <span style="font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Mono','Space Mono',monospace">${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
+    </div>
+    <div style="margin-bottom:28px">
+      <div style="font-size:46px;font-weight:700;color:${verdictColor};letter-spacing:-0.03em;line-height:1;text-transform:capitalize;font-family:inherit">${r.result}</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.38);margin-top:8px;font-family:'DM Mono','Space Mono',monospace">${r.confidence}% confidence</div>
+    </div>
+    ${r.summary ? `<div style="font-size:13px;color:rgba(255,255,255,0.62);line-height:1.7;margin-bottom:28px;font-family:inherit">${r.summary}</div>` : ""}
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:rgba(255,255,255,0.25);margin-bottom:12px;text-transform:uppercase;font-family:'DM Mono','Space Mono',monospace">Packaging Checks</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${checksHtml}</div>
+    ${flagsHtml}
+    <div style="margin-top:40px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.07);font-size:10px;color:rgba(255,255,255,0.2);font-family:'DM Mono','Space Mono',monospace">
+      verifyskn.com · ${new Date().toISOString().replace("T", " ").slice(0, 19)} UTC
+    </div>
+  `;
+
+  document.body.appendChild(el);
+  try {
+    const canvas = await html2canvas(el, {
+      scale: 2, useCORS: true, logging: false, backgroundColor: "#0b1e0f",
+    });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = (canvas.height / canvas.width) * pdfW;
+    pdf.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
+    pdf.save(`verifyskn-report-${Date.now()}.pdf`);
+  } finally {
+    document.body.removeChild(el);
+  }
+}
+
+// ── HomeClient ────────────────────────────────────────────────
+
+export function HomeClient() {
+  const [tab,    setTab]    = useState<Tab>("serial");
+  const [serial, setSerial] = useState("");
+  const [phase,  setPhase]  = useState<Phase>("idle");
+  const [result, setResult] = useState<ProductData | null>(null);
+  const [showReport,    setShowReport]    = useState(false);
+  const [reportPrefill, setReportPrefill] = useState<{ issues: ReportIssue[]; desc: string }>({ issues: [], desc: "" });
+
+  // Deep analysis state
+  const [deepPhase,  setDeepPhase]  = useState<UploadPhase>("idle");
+  const [deepError,  setDeepError]  = useState<string | null>(null);
+  const [deepResult, setDeepResult] = useState<DeepResult | null>(null);
+
+  // ── Lookup ──────────────────────────────────────────────────
+  const lookup = useCallback(async (code: string) => {
+    setPhase("loading");
+    try {
+      const res  = await fetch(`/api/product/${encodeURIComponent(code)}`);
+      const data = await res.json() as ProductData;
+      setResult(data);
+      setPhase(data.source === "not_found" ? "not-found" : "result");
+    } catch {
+      setResult({ source: "not_found" });
+      setPhase("not-found");
+    }
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = serial.trim();
+    if (code) lookup(code);
+  };
+
+  const handleScan = useCallback((barcode: string) => {
+    setSerial(barcode);
+    lookup(barcode);
+  }, [lookup]);
+
+  const reset = () => {
+    setPhase("idle");
+    setResult(null);
+    setSerial("");
+    setDeepPhase("idle");
+    setDeepError(null);
+    setDeepResult(null);
+  };
+
+  // ── Deep analysis ───────────────────────────────────────────
+  const handleDeepImageReady = useCallback(async (base64: string, mimeType: string) => {
+    setDeepPhase("analyzing");
+    setDeepError(null);
+    setDeepResult(null);
+    try {
+      const res = await fetch("/api/analyse-product", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ image: base64, mimeType }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? `Server responded with ${res.status}`);
+      }
+      const data = await res.json();
+      try {
+        const session: ImageAnalysisSession = {
+          result:          data.result,
+          confidence:      data.confidence,
+          summary:         data.summary ?? "",
+          flags:           data.flags ?? [],
+          font_quality:    data.packaging_checks?.font_quality    ?? "",
+          logo_accuracy:   data.packaging_checks?.logo_accuracy   ?? "",
+          print_quality:   data.packaging_checks?.print_quality   ?? "",
+          label_alignment: data.packaging_checks?.label_alignment ?? "",
+          spelling_check:  data.packaging_checks?.spelling        ?? "",
+          hologram_check:  data.packaging_checks?.hologram        ?? "",
+          sessionId:       data.sessionId,
+        };
+        sessionStorage.setItem(IMAGE_SESSION_KEY, JSON.stringify(session));
+      } catch { /* sessionStorage unavailable */ }
+
+      setDeepResult({
+        result:          data.result,
+        confidence:      data.confidence,
+        summary:         data.summary ?? "",
+        flags:           data.flags ?? [],
+        font_quality:    data.packaging_checks?.font_quality    ?? "",
+        logo_accuracy:   data.packaging_checks?.logo_accuracy   ?? "",
+        print_quality:   data.packaging_checks?.print_quality   ?? "",
+        label_alignment: data.packaging_checks?.label_alignment ?? "",
+        spelling_check:  data.packaging_checks?.spelling        ?? "",
+        hologram_check:  data.packaging_checks?.hologram        ?? "",
+        sessionId:       data.sessionId,
+      });
+      setDeepPhase("idle");
+    } catch (err) {
+      setDeepPhase("error");
+      setDeepError(err instanceof Error ? err.message : "Analysis failed — please try again with a clearer photo.");
+    }
+  }, []);
+
+  // ── Derived ─────────────────────────────────────────────────
+  const productName = result?.name || result?.product_name || "Unknown product";
+  const brandName   = result?.brand || "Unknown brand";
+  const isAuth      = result?.source === "database";
+  const isUnverif   = result?.source === "open_beauty_facts";
+
+  return (
+    <div
+      className="-mt-14 flex h-screen flex-col overflow-hidden"
+      style={{ background: C.forestDeep, color: "#fff", fontFamily: UI }}
+    >
+      {/* ── Navbar ── */}
+      <nav
+        className="flex flex-shrink-0 items-center justify-between px-8"
+        style={{ background: C.forest, borderBottom: `0.5px solid ${C.border}`, height: "56px" }}
+      >
+        <button
+          onClick={reset}
+          className="text-[17px] font-semibold leading-none text-white"
+          style={{ letterSpacing: "-0.04em", background: "none", border: "none", cursor: "pointer", fontFamily: UI }}
+        >
+          .verify<span style={{ color: C.lime }}>skn</span>
+        </button>
+        <div className="hidden items-center gap-7 md:flex">
+          <Link
+            href="/about"
+            className="text-xs transition-colors hover:text-white"
+            style={{ color: C.w40, textDecoration: "none" }}
+          >
+            About
+          </Link>
+        </div>
+      </nav>
+
+      {/* ── Main split ── */}
+      <div className="flex flex-1 overflow-hidden flex-col lg:grid lg:grid-cols-2">
+
+        {/* ════════ LEFT PANEL ════════ */}
+        <div
+          className="flex flex-col overflow-hidden px-10 py-8"
+          style={{ background: C.forest, borderRight: `0.5px solid ${C.border}` }}
+        >
+          <h1
+            className="mb-3 font-semibold leading-[1.1]"
+            style={{ fontSize: "clamp(22px, 2.8vw, 34px)", letterSpacing: "-0.03em" }}
+          >
+            Protect your skin.<br />Confirm your source.
+          </h1>
+
+          <p className="mb-6 text-sm leading-relaxed" style={{ color: C.w40, maxWidth: "360px" }}>
+            Every genuine VerifySkn product carries a unique code on the base of its packaging. Enter it below or scan to verify.
+          </p>
+
+          {/* ── Tabs ── */}
+          <div className="mb-7 flex flex-wrap gap-2">
+            {([
+              { id: "serial" as Tab, label: "Serial code" },
+              { id: "deep"   as Tab, label: "Deep analysis" },
+            ]).map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => { setTab(id); if (phase === "scanning") setPhase("idle"); }}
+                className="rounded-full px-4 py-1.5 text-xs transition-all"
+                style={{
+                  fontFamily: MONO,
+                  border:     `0.5px solid ${tab === id ? C.limeBorder : C.w15}`,
+                  background: tab === id ? C.limeDim : "transparent",
+                  color:      tab === id ? C.lime    : C.w25,
+                  cursor:     "pointer",
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Serial code tab ── */}
+          {tab === "serial" && (
+            phase !== "scanning" ? (
+              <form onSubmit={handleSubmit} className="flex flex-col">
+                <label className="mb-3 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                  Enter unique serial number
+                </label>
+                <input
+                  value={serial}
+                  onChange={(e) => setSerial(fmt(e.target.value))}
+                  placeholder="SKN-000-000"
+                  maxLength={13}
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={phase === "loading"}
+                  className="serial-input mb-2.5 w-full rounded-lg px-4 py-3 text-xl font-medium outline-none transition-all"
+                  style={{
+                    background:    C.w04,
+                    border:        `0.5px solid ${C.w15}`,
+                    color:         C.w60,
+                    fontFamily:    MONO,
+                    letterSpacing: "0.06em",
+                    caretColor:    C.lime,
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = C.limeBorder;
+                    e.currentTarget.style.background  = "rgba(125,201,138,0.04)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = C.w15;
+                    e.currentTarget.style.background  = C.w04;
+                  }}
+                />
+                <p className="mb-8 text-xs" style={{ color: "rgba(255,255,255,0.2)", fontFamily: MONO }}>
+                  Find this on the base of your product packaging
+                </p>
+
+                {/* ── Barcode scan area ── */}
+                <label className="mb-3 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                  Or scan barcode
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setPhase("scanning")}
+                  className="mb-8 flex w-full items-center gap-5 rounded-xl px-5 py-4 transition-all hover:brightness-110"
+                  style={{ background: C.w04, border: `0.5px solid ${C.w08}`, cursor: "pointer" }}
+                >
+                  <div style={{ position: "relative", height: "40px", width: "68px", flexShrink: 0, overflow: "hidden" }}>
+                    {([
+                      { top: 0,    left:  0,    borderWidth: "1.5px 0 0 1.5px" },
+                      { top: 0,    right: 0,    borderWidth: "1.5px 1.5px 0 0" },
+                      { bottom: 0, left:  0,    borderWidth: "0 0 1.5px 1.5px" },
+                      { bottom: 0, right: 0,    borderWidth: "0 1.5px 1.5px 0" },
+                    ] as React.CSSProperties[]).map((s, i) => (
+                      <div key={i} style={{ position: "absolute", width: "10px", height: "10px", borderColor: C.lime, borderStyle: "solid", ...s }} />
+                    ))}
+                    <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", display: "flex", gap: "1.5px", alignItems: "stretch", height: "22px" }}>
+                      {BARS.slice(0, 28).map(({ w, op }, i) => (
+                        <div key={i} style={{ width: `${Math.max(w - 0.5, 0.5)}px`, opacity: op, background: C.w60, borderRadius: "1px", flexShrink: 0 }} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1 text-left">
+                    <span className="text-sm font-medium" style={{ color: C.w60, fontFamily: UI }}>Scan barcode</span>
+                    <span className="text-xs" style={{ color: C.w25, fontFamily: MONO }}>Tap to activate camera</span>
+                  </div>
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={!serial.trim() || phase === "loading"}
+                  className="w-full rounded-lg py-3.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                  style={{
+                    background: C.lime,
+                    color:      C.forestDeep,
+                    border:     "none",
+                    cursor:     (!serial.trim() || phase === "loading") ? "default" : "pointer",
+                    opacity:    (!serial.trim() || phase === "loading") ? 0.45 : 1,
+                    fontFamily: UI,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {phase === "loading" ? "Verifying…" : "Verify product"}
+                </button>
+              </form>
+            ) : (
+              /* ── Inline camera scanner ── */
+              <div className="flex flex-col gap-4">
+                <div
+                  className="overflow-hidden rounded-xl"
+                  style={{ border: `0.5px solid ${C.limeBorder}`, background: "#000" }}
+                >
+                  <Scanner
+                    onScan={handleScan}
+                    onDetect={() => {}}
+                    showManualEntry={false}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPhase("idle")}
+                  className="w-full rounded-lg py-2.5 text-sm transition-all hover:text-white"
+                  style={{ background: "transparent", border: `0.5px solid ${C.w15}`, color: C.w40, cursor: "pointer", fontFamily: UI }}
+                >
+                  Cancel scanner
+                </button>
+              </div>
+            )
+          )}
+
+          {/* ── Deep analysis tab ── */}
+          {tab === "deep" && (
+            <div className="flex flex-col gap-4">
+              {deepPhase === "idle" && (
+                <ImageUploader onImageReady={handleDeepImageReady} />
+              )}
+              {deepPhase === "analyzing" && (
+                <AnalysisLoader />
+              )}
+              {deepPhase === "error" && (
+                <div className="flex flex-col gap-4">
+                  <div
+                    className="rounded-xl px-4 py-3"
+                    style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}` }}
+                  >
+                    <p className="text-sm" style={{ color: C.red, fontFamily: MONO }}>{deepError}</p>
+                  </div>
+                  <button
+                    onClick={() => { setDeepPhase("idle"); setDeepError(null); }}
+                    className="self-start rounded-lg px-5 py-2.5 text-sm transition-all"
+                    style={{ background: C.w04, border: `0.5px solid ${C.limeBorder}`, color: C.lime, cursor: "pointer", fontFamily: UI }}
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ════════ RIGHT PANEL ════════ */}
+        <div
+          className="flex flex-col overflow-y-auto px-10 py-10"
+          style={{ background: C.forestMid }}
+        >
+
+          {/* ── Serial tab states ── */}
+          {tab === "serial" && (
+            <>
+              {/* Idle */}
+              {phase === "idle" && (
+                <div className="flex flex-1 flex-col items-center justify-center gap-5 py-16 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full"
+                    style={{ background: C.limeDim, border: `0.5px solid ${C.limeBorder}` }}>
+                    <ShieldIcon />
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: C.w25, maxWidth: "220px" }}>
+                    Enter a serial number or scan a barcode to verify your product
+                  </p>
+                </div>
+              )}
+
+              {/* Scanning */}
+              {phase === "scanning" && (
+                <div className="flex flex-1 flex-col items-center justify-center gap-4 py-16 text-center">
+                  <Spinner />
+                  <p className="text-xs" style={{ color: C.w40, fontFamily: MONO }}>Scanner active…</p>
+                </div>
+              )}
+
+              {/* Loading */}
+              {phase === "loading" && (
+                <div className="flex flex-1 flex-col items-center justify-center gap-4 py-16 text-center">
+                  <Spinner />
+                  <p className="text-xs" style={{ color: C.w40, fontFamily: MONO }}>Looking up product…</p>
+                </div>
+              )}
+
+              {/* Not found */}
+              {phase === "not-found" && (
+                <div className="flex flex-1 flex-col gap-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: C.red }} />
+                    <span className="text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                      Authentication status
+                    </span>
+                  </div>
+                  <h2 className="font-semibold" style={{ fontSize: "clamp(22px,2.5vw,32px)", color: C.red, letterSpacing: "-0.025em" }}>
+                    Not found
+                  </h2>
+                  <p className="text-sm leading-relaxed" style={{ color: C.w40, maxWidth: "320px" }}>
+                    We could not find this product in our database or any known source. It may be counterfeit or unregistered.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowReport(true)}
+                    className="self-start rounded-lg px-5 py-2.5 text-sm font-semibold"
+                    style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}`, color: C.red, cursor: "pointer" }}>
+                    Report this product
+                  </button>
+                  <button onClick={reset} className="self-start text-xs"
+                    style={{ color: C.w25, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                    Try another
+                  </button>
+                </div>
+              )}
+
+              {/* Result */}
+              {phase === "result" && result && (
+                <>
+                  <div className="mb-2.5 flex items-center gap-2">
+                    <span className="h-2 w-2 flex-shrink-0 rounded-full"
+                      style={{ background: isAuth ? C.lime : C.amber, animation: "breathe 2.5s ease-in-out infinite" }} />
+                    <span className="text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                      Authentication status
+                    </span>
+                  </div>
+
+                  <h2 className="mb-7 font-semibold"
+                    style={{ fontSize: "clamp(22px,2.5vw,32px)", color: isAuth ? C.lime : C.amber, letterSpacing: "-0.025em" }}>
+                    {isAuth ? "Genuine — verified" : "Unverified source"}
+                  </h2>
+
+                  {/* Product card */}
+                  <div className="mb-6 grid rounded-xl p-4"
+                    style={{ background: C.w04, border: `0.5px solid ${C.w08}`, gridTemplateColumns: "64px 1fr", gap: "16px", alignItems: "center" }}>
+                    <div className="flex flex-col justify-end rounded-md p-2"
+                      style={{ background: C.forestLight, border: `0.5px solid ${C.w08}`, height: "80px" }}>
+                      <p className="text-xs leading-snug" style={{ color: C.w25, fontFamily: MONO }}>
+                        {productName.slice(0, 18)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-base font-semibold" style={{ letterSpacing: "-0.02em" }}>{productName}</p>
+                      <p className="mb-2.5 text-xs" style={{ color: C.w40 }}>{brandName}</p>
+                      <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs"
+                        style={{
+                          background: isAuth ? C.limeDim : "rgba(255,193,7,0.1)",
+                          border:     `0.5px solid ${isAuth ? C.limeBorder : "rgba(255,193,7,0.25)"}`,
+                          color:      isAuth ? C.lime : C.amber,
+                          fontFamily: MONO,
+                        }}>
+                        <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ background: isAuth ? C.lime : C.amber }} />
+                        {isAuth ? "Verified brand" : "Unverified source"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <hr style={{ border: "none", borderTop: `0.5px solid ${C.border}`, marginBottom: "20px" }} />
+
+                  {/* Meta grid */}
+                  <div className="mb-6 grid grid-cols-2 gap-x-8 gap-y-4">
+                    {[
+                      { label: "Product name", value: productName },
+                      { label: "Barcode",      value: result.barcode || serial },
+                      { label: "Brand",        value: brandName },
+                      { label: "Category",     value: result.category || result.categories?.split(",")[0]?.trim() || "Beauty" },
+                      { label: "Source",       value: isAuth ? "Verified database" : "Public registry" },
+                      { label: "Status",       value: isAuth ? "Authenticated" : "Unverified" },
+                    ].map(({ label, value }) => (
+                      <div key={label}>
+                        <p className="mb-1 text-xs uppercase tracking-wider" style={{ color: C.w25, fontFamily: MONO }}>{label}</p>
+                        <p className="text-sm font-medium" style={{ letterSpacing: "-0.01em" }}>{value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Unverified warning */}
+                  {isUnverif && (
+                    <div className="mb-5 flex items-start gap-2.5 rounded-lg px-4 py-3"
+                      style={{ background: C.amberBg, border: `0.5px solid ${C.amberBorder}` }}>
+                      <div className="mt-px flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+                        style={{ border: "1px solid rgba(255,193,7,0.4)", color: C.amber, fontFamily: MONO }}>
+                        !
+                      </div>
+                      <p className="text-xs leading-relaxed" style={{ color: C.amber, fontFamily: MONO }}>
+                        Found in a public registry but not verified by VerifySkn. Use the full scan page for complete authentication.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Link href={`/result/${encodeURIComponent(result.barcode || serial)}`}
+                      className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                      style={{ background: C.lime, color: C.forestDeep, textDecoration: "none" }}>
+                      Full analysis
+                    </Link>
+                    <button
+                      onClick={() => { setReportPrefill({ issues: [], desc: "" }); setShowReport(true); }}
+                      className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
+                      style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}`, color: C.red, cursor: "pointer", fontFamily: UI }}
+                    >
+                      Report product
+                    </button>
+                    <button onClick={reset} className="text-xs transition-colors hover:text-white"
+                      style={{ color: C.w25, background: "none", border: "none", cursor: "pointer" }}>
+                      Scan another
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* ── Deep tab — idle / analyzing ── */}
+          {tab === "deep" && !deepResult && (
+            <div className="flex flex-1 flex-col items-center justify-center gap-5 py-16 text-center">
+              {deepPhase === "analyzing" ? (
+                <>
+                  <Spinner />
+                  <p className="text-xs" style={{ color: C.w40, fontFamily: MONO }}>Analysing packaging…</p>
+                </>
+              ) : (
+                <>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full"
+                    style={{ background: C.limeDim, border: `0.5px solid ${C.limeBorder}` }}>
+                    <ShieldIcon />
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: C.w25, maxWidth: "220px" }}>
+                    Upload a product photo to run deep packaging analysis
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── Deep tab — result ── */}
+          {tab === "deep" && deepResult && (
+            <>
+              {/* Header row */}
+              <div className="mb-2.5 flex items-center gap-2">
+                <span
+                  className="h-2 w-2 flex-shrink-0 rounded-full"
+                  style={{ background: VERDICT_COLORS[deepResult.result] ?? C.lime, animation: "breathe 2.5s ease-in-out infinite" }}
+                />
+                <span className="text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                  Image analysis
+                </span>
+              </div>
+
+              {/* Verdict + confidence */}
+              <h2
+                className="mb-1.5 font-semibold capitalize"
+                style={{ fontSize: "clamp(22px,2.5vw,32px)", color: VERDICT_COLORS[deepResult.result] ?? C.lime, letterSpacing: "-0.025em" }}
+              >
+                {deepResult.result}
+              </h2>
+              <p className="mb-5 text-xs" style={{ color: C.w25, fontFamily: MONO }}>
+                {deepResult.confidence}% confidence
+              </p>
+
+              {/* Summary */}
+              {deepResult.summary && (
+                <p className="mb-6 text-sm leading-relaxed" style={{ color: C.w40, maxWidth: "340px" }}>
+                  {deepResult.summary}
+                </p>
+              )}
+
+              {/* Packaging checks grid */}
+              <p className="mb-3 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                Packaging checks
+              </p>
+              <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {DEEP_CHECKS.map(({ key, label }) => {
+                  const badge = normalizeCheck(deepResult[key] as string);
+                  const { label: badgeLabel, bg, color } = BADGE_CFG[badge];
+                  return (
+                    <div
+                      key={key}
+                      className="flex flex-col gap-2 rounded-lg p-3"
+                      style={{ background: C.w04, border: `0.5px solid ${C.w08}` }}
+                    >
+                      <p className="text-xs" style={{ color: C.w40, fontFamily: MONO }}>{label}</p>
+                      <span
+                        className="self-start rounded-full px-2.5 py-0.5 text-xs"
+                        style={{ background: bg, color, fontFamily: MONO }}
+                      >
+                        {badgeLabel}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Flags */}
+              {deepResult.flags.length > 0 && (
+                <div
+                  className="mb-5 rounded-lg p-3"
+                  style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}` }}
+                >
+                  <p className="mb-2 text-xs uppercase tracking-widest" style={{ color: C.red, fontFamily: MONO }}>
+                    Issues detected
+                  </p>
+                  <ul className="flex flex-col gap-1.5">
+                    {deepResult.flags.map((flag, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs" style={{ color: C.w60 }}>
+                        <span style={{ color: C.red, flexShrink: 0 }}>›</span>
+                        {flag}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => downloadDeepReport(deepResult)}
+                  className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                  style={{ background: C.lime, color: C.forestDeep, border: "none", cursor: "pointer", fontFamily: UI }}
+                >
+                  Download report
+                </button>
+                <button
+                  onClick={() => {
+                    const issues: ReportIssue[] = deepResult.result === "suspicious" ? ["counterfeit"] : deepResult.result === "unverified" ? ["wrong_info"] : [];
+                    const flags = deepResult.flags.length > 0 ? `Flags:\n${deepResult.flags.map(f => `• ${f}`).join("\n")}` : "";
+                    const desc = [deepResult.summary, flags].filter(Boolean).join("\n\n");
+                    setReportPrefill({ issues, desc });
+                    setShowReport(true);
+                  }}
+                  className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
+                  style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}`, color: C.red, cursor: "pointer", fontFamily: UI }}
+                >
+                  Report product
+                </button>
+              </div>
+            </>
+          )}
+
+        </div>
+      </div>
+
+      {/* ── Bottom bar ── */}
+      <div className="flex flex-shrink-0 items-center justify-between px-8 py-2.5"
+        style={{ background: C.forestDeep, borderTop: `0.5px solid ${C.border}` }}>
+        <span className="text-xs" style={{ color: C.w25, fontFamily: MONO }}>SkinCare Registry v2.4.0</span>
+        <span className="text-xs" style={{ color: C.w25, fontFamily: MONO }}>© 2026 VerifySkn</span>
+      </div>
+
+      {/* ── Report modal ── */}
+      {showReport && (
+        <ReportModal
+          barcode={result?.barcode || serial}
+          prefillIssues={reportPrefill.issues}
+          prefillDesc={reportPrefill.desc}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Icons ─────────────────────────────────────────────────────
+
+function Spinner() {
+  return (
+    <div className="h-8 w-8 animate-spin rounded-full"
+      style={{ border: "2px solid rgba(125,201,138,0.2)", borderTopColor: "#7dc98a" }} />
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(125,201,138,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  );
+}

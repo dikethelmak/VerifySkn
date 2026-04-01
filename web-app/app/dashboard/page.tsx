@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+import { ReportButton } from "@/components/ReportButton";
 import type { ScanVerdict } from "@/lib/database.types";
 
 export const metadata: Metadata = { title: "Dashboard — VerifySkn" };
@@ -302,12 +303,10 @@ export default async function DashboardPage() {
             <SectionHeader
               title="My Reports"
               action={
-                <Link
-                  href="/report"
+                <ReportButton
+                  label="+ Submit New Report"
                   className="rounded-xl bg-primary px-4 py-2 font-rethink text-sm font-medium text-white transition-colors hover:bg-primary/90"
-                >
-                  + Submit New Report
-                </Link>
+                />
               }
             />
 
@@ -433,7 +432,7 @@ export default async function DashboardPage() {
 
           {/* Quick scan CTA */}
           <Link
-            href="/scan"
+            href="/"
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-rethink text-base font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98]"
           >
             <ScanIcon className="h-5 w-5" />

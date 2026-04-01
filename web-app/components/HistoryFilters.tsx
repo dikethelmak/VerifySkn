@@ -45,11 +45,12 @@ function Pill({
     <button
       onClick={onClick}
       className={cn(
-        "rounded-full px-3.5 py-1.5 font-rethink text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+        "rounded-full px-3.5 py-1.5 font-syne text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime/50",
         active
-          ? "bg-primary text-white"
-          : "bg-surface text-text-secondary border border-border hover:border-primary/40 hover:text-text-primary"
+          ? "border border-lime/40 text-lime"
+          : "bg-surface text-text-secondary border border-border hover:border-lime/30 hover:text-text-primary"
       )}
+      style={active ? { backgroundColor: "rgba(125,201,138,0.12)" } : undefined}
     >
       {children}
     </button>
@@ -60,14 +61,14 @@ function Pill({
 
 function VerdictBadge({ verdict }: { verdict: ScanVerdict }) {
   const styles: Record<ScanVerdict, { bg: string; text: string }> = {
-    authentic:  { bg: "rgba(45,122,79,0.1)",  text: "#2D7A4F" },
-    unverified: { bg: "rgba(224,123,42,0.1)", text: "#E07B2A" },
-    suspicious: { bg: "rgba(192,57,43,0.1)",  text: "#C0392B" },
+    authentic:  { bg: "rgba(125,201,138,0.12)", text: "#7dc98a" },
+    unverified: { bg: "rgba(224,123,42,0.1)",  text: "#E07B2A" },
+    suspicious: { bg: "rgba(192,57,43,0.1)",   text: "#C0392B" },
   };
   const { bg, text } = styles[verdict];
   return (
     <span
-      className="inline-block rounded-full px-2.5 py-1 font-rethink text-xs font-medium capitalize"
+      className="inline-block rounded-full px-2.5 py-1 font-syne text-xs font-medium capitalize"
       style={{ backgroundColor: bg, color: text }}
     >
       {verdict}
@@ -80,7 +81,7 @@ function VerdictBadge({ verdict }: { verdict: ScanVerdict }) {
 function PaginationButton({ href, label }: { href: string | null; label: string }) {
   if (!href) {
     return (
-      <span className="cursor-not-allowed rounded-lg border border-border px-4 py-2 font-rethink text-sm text-text-secondary opacity-40">
+      <span className="cursor-not-allowed rounded-lg border border-border px-4 py-2 font-syne text-sm text-text-secondary opacity-40">
         {label}
       </span>
     );
@@ -88,7 +89,7 @@ function PaginationButton({ href, label }: { href: string | null; label: string 
   return (
     <Link
       href={href}
-      className="rounded-lg border border-border px-4 py-2 font-rethink text-sm font-medium text-text-primary transition-colors hover:bg-background"
+      className="rounded-lg border border-border px-4 py-2 font-syne text-sm font-medium text-text-primary transition-colors hover:bg-background"
     >
       {label}
     </Link>
@@ -140,7 +141,7 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
         {/* Result filter */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary">
+          <span className="font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">
             Result
           </span>
           {RESULT_FILTERS.map((f) => (
@@ -159,7 +160,7 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
 
         {/* Scan type filter */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary">
+          <span className="font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">
             Type
           </span>
           {SCAN_TYPE_FILTERS.map((f) => (
@@ -183,7 +184,7 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
                 {["Date", "Barcode", "Product", "Result", "Type", "Confidence"].map((h) => (
                   <th
                     key={h}
-                    className="px-5 py-3.5 font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary"
+                    className="px-5 py-3.5 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary"
                   >
                     {h}
                   </th>
@@ -201,13 +202,13 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
                       !isLast && "border-b border-border"
                     )}
                   >
-                    <td className="whitespace-nowrap px-5 py-4 font-rethink text-sm text-text-secondary">
+                    <td className="whitespace-nowrap px-5 py-4 font-syne text-sm text-text-secondary">
                       {formatDate(log.scanned_at)}
                     </td>
                     <td className="px-5 py-4">
                       <Link
                         href={`/result/${encodeURIComponent(log.barcode_scanned)}`}
-                        className="font-mono text-sm text-primary underline-offset-2 hover:underline"
+                        className="font-mono text-sm text-lime underline-offset-2 hover:underline"
                       >
                         {log.barcode_scanned}
                       </Link>
@@ -215,15 +216,15 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
                     <td className="px-5 py-4">
                       {log.product ? (
                         <div>
-                          <p className="font-rethink text-sm font-medium text-text-primary">
+                          <p className="font-syne text-sm font-medium text-text-primary">
                             {log.product.name}
                           </p>
-                          <p className="font-rethink text-xs text-text-secondary">
+                          <p className="font-syne text-xs text-text-secondary">
                             {log.product.brand}
                           </p>
                         </div>
                       ) : (
-                        <span className="font-rethink text-sm text-text-secondary">
+                        <span className="font-syne text-sm text-text-secondary">
                           Unknown
                         </span>
                       )}
@@ -236,7 +237,7 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
                         <Camera
                           size={15}
                           strokeWidth={1.8}
-                          className="text-primary"
+                          className="text-lime"
                           aria-label="Barcode + Image"
                         />
                       ) : (
@@ -258,8 +259,8 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
           </table>
         ) : (
           <div className="flex flex-col items-center justify-center px-5 py-16 text-center">
-            <p className="font-fraunces text-lg text-text-secondary">No matching scans</p>
-            <p className="mt-1 font-rethink text-sm text-text-secondary">
+            <p className="font-syne text-lg text-text-secondary">No matching scans</p>
+            <p className="mt-1 font-syne text-sm text-text-secondary">
               Try adjusting the filters above.
             </p>
           </div>
@@ -273,7 +274,7 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
             href={page > 1 ? `/history?page=${page - 1}` : null}
             label="← Previous"
           />
-          <p className="font-rethink text-sm text-text-secondary">
+          <p className="font-syne text-sm text-text-secondary">
             Page {page} of {totalPages}
           </p>
           <PaginationButton

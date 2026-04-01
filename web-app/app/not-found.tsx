@@ -82,7 +82,7 @@ export default function NotFound() {
           Back to Home
         </Link>
         <Link
-          href="/scan"
+          href="/"
           className="rounded-xl border border-primary px-8 py-3 font-rethink text-sm font-medium text-primary transition-colors hover:bg-primary/5"
         >
           Scan a Product

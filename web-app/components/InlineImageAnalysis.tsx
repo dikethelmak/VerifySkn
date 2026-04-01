@@ -36,10 +36,10 @@ interface Props {
 // ── Badge helpers ─────────────────────────────────────────────
 
 const BADGE_CONFIG: Record<CheckBadge, { label: string; bg: string; color: string }> = {
-  pass:      { label: "Pass",      bg: "#2D7A4F", color: "#FFFFFF" },
-  fail:      { label: "Fail",      bg: "#C0392B", color: "#FFFFFF" },
-  uncertain: { label: "Uncertain", bg: "#E07B2A", color: "#FFFFFF" },
-  na:        { label: "N/A",       bg: "#E5E2DD", color: "#6B6B6B" },
+  pass:      { label: "Pass",      bg: "#7dc98a",              color: "#0b1e0f" },
+  fail:      { label: "Fail",      bg: "#C0392B",              color: "#FFFFFF" },
+  uncertain: { label: "Uncertain", bg: "#E07B2A",              color: "#FFFFFF" },
+  na:        { label: "N/A",       bg: "rgba(255,255,255,0.09)", color: "rgba(238,236,234,0.5)" },
 };
 
 const VERDICT_CONFIG: Record<ScanVerdict, { label: string; bg: string }> = {
@@ -83,10 +83,10 @@ function InlineResultDisplay({ result }: { result: InlineResult }) {
         style={{ backgroundColor: bg, borderRadius: 16 }}
       >
         <div>
-          <p className="font-fraunces text-2xl font-semibold leading-none">{label}</p>
+          <p className="font-syne text-2xl font-semibold leading-none">{label}</p>
           <p className="mt-1 font-mono text-sm opacity-80">{result.confidence}% confidence</p>
           {result.summary && (
-            <p className="mt-2 font-rethink text-sm leading-relaxed opacity-85">
+            <p className="mt-2 font-syne text-sm leading-relaxed opacity-85">
               {result.summary}
             </p>
           )}
@@ -106,11 +106,11 @@ function InlineResultDisplay({ result }: { result: InlineResult }) {
               transition={{ duration: 0.2, delay: i * 0.06 }}
               className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3 shadow-sm"
             >
-              <p className="font-rethink text-xs font-semibold text-text-primary">
+              <p className="font-syne text-xs font-semibold text-text-primary">
                 {check.label}
               </p>
               <span
-                className="w-fit rounded-full px-2 py-0.5 font-rethink text-xs font-medium"
+                className="w-fit rounded-full px-2 py-0.5 font-syne text-xs font-medium"
                 style={{ backgroundColor: badgeBg, color }}
               >
                 {badgeLabel}
@@ -124,9 +124,9 @@ function InlineResultDisplay({ result }: { result: InlineResult }) {
       {result.flags.length > 0 && (
         <div
           className="w-full rounded-xl p-4"
-          style={{ backgroundColor: "#FDF2F2", borderRadius: 12 }}
+          style={{ backgroundColor: "rgba(192,57,43,0.1)", borderRadius: 12 }}
         >
-          <p className="mb-2 font-rethink text-sm font-semibold" style={{ color: "#C0392B" }}>
+          <p className="mb-2 font-syne text-sm font-semibold" style={{ color: "#C0392B" }}>
             Issues Detected
           </p>
           <ul className="flex flex-col gap-1.5">
@@ -138,7 +138,7 @@ function InlineResultDisplay({ result }: { result: InlineResult }) {
                   className="mt-0.5 shrink-0"
                   style={{ color: "#C0392B" }}
                 />
-                <span className="font-rethink text-sm text-text-primary">{flag}</span>
+                <span className="font-syne text-sm text-text-primary">{flag}</span>
               </li>
             ))}
           </ul>
@@ -151,12 +151,12 @@ function InlineResultDisplay({ result }: { result: InlineResult }) {
           className="rounded-xl border border-border bg-surface px-5 py-4"
           style={{ borderRadius: 14 }}
         >
-          <p className="font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary">
+          <p className="font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">
             Combined verdict
           </p>
           <div className="mt-1 flex items-baseline gap-2">
             <span
-              className="font-fraunces font-semibold leading-none"
+              className="font-syne font-semibold leading-none"
               style={{
                 fontSize: 32,
                 color: VERDICT_CONFIG[result.finalResult].bg,
@@ -164,11 +164,11 @@ function InlineResultDisplay({ result }: { result: InlineResult }) {
             >
               {result.finalConfidence}%
             </span>
-            <span className="font-rethink text-sm capitalize text-text-secondary">
+            <span className="font-syne text-sm capitalize text-text-secondary">
               {result.finalResult}
             </span>
           </div>
-          <p className="mt-1 font-rethink text-xs text-text-secondary">
+          <p className="mt-1 font-syne text-xs text-text-secondary">
             Based on barcode + packaging image analysis
           </p>
         </div>
@@ -250,10 +250,10 @@ export function InlineImageAnalysis({ barcode, sessionId }: Props) {
             transition={{ duration: 0.2 }}
             className="mb-5"
           >
-            <p className="font-fraunces text-xl font-semibold text-text-primary">
+            <p className="font-syne text-xl font-semibold text-text-primary">
               Help the community
             </p>
-            <p className="mt-1 font-rethink text-sm text-text-secondary">
+            <p className="mt-1 font-syne text-sm text-text-secondary">
               Upload a photo to get a deeper analysis of this product&apos;s packaging.
             </p>
           </motion.div>
@@ -310,15 +310,16 @@ export function InlineImageAnalysis({ barcode, sessionId }: Props) {
           >
             <div
               className="w-full rounded-xl px-5 py-4"
-              style={{ backgroundColor: "#FDF2F2", borderRadius: 12 }}
+              style={{ backgroundColor: "rgba(192,57,43,0.1)", borderRadius: 12 }}
             >
-              <p className="font-rethink text-sm font-medium" style={{ color: "#C0392B" }}>
+              <p className="font-syne text-sm font-medium" style={{ color: "#C0392B" }}>
                 {error}
               </p>
             </div>
             <button
               onClick={handleRetry}
-              className="self-start rounded-xl border border-primary px-5 py-2.5 font-rethink text-sm font-medium text-primary transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="self-start rounded-xl border px-5 py-2.5 font-syne text-sm font-medium text-lime transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime/50"
+              style={{ borderColor: "rgba(125,201,138,0.35)" }}
             >
               Try Again
             </button>

@@ -37,7 +37,7 @@ export function ResultHero({ verdict, confidence, summary }: ResultHeroProps) {
 
   return (
     <section
-      className="flex w-full flex-col items-center justify-center px-6 py-16 text-white"
+      className="flex w-full flex-col items-center justify-center px-8 py-16 text-white"
       style={{ backgroundColor: bg }}
     >
       {/* Status icon — scale up + fade in */}
@@ -76,7 +76,7 @@ export function ResultHero({ verdict, confidence, summary }: ResultHeroProps) {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 0.85, y: 0 }}
           transition={{ delay: 0.48, duration: 0.35, ease: "easeOut" }}
-          className="mt-4 max-w-sm text-center font-rethink text-base font-normal leading-relaxed"
+          className="mt-4 max-w-sm text-center font-syne text-base font-normal leading-relaxed"
         >
           {summary}
         </motion.p>

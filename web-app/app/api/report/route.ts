@@ -104,15 +104,20 @@ export async function POST(request: NextRequest) {
   let productId: string | null = null
 
   if (barcode) {
-    const supabase = createClient()
-    const { data: product } = await supabase
-      .from('products')
-      .select('id, brand')
-      .eq('barcode', barcode)
-      .maybeSingle()
-    if (product) {
-      brand = product.brand
-      productId = product.id
+    try {
+      const supabase = createClient()
+      const { data: product } = await supabase
+        .from('products')
+        .select('id, brand')
+        .eq('barcode', barcode)
+        .maybeSingle()
+      if (product) {
+        brand = product.brand
+        productId = product.id
+      }
+    } catch (err) {
+      console.error('[report] product lookup failed:', err)
+      // Non-critical — continue without brand context
     }
   }
 

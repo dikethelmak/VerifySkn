@@ -18,6 +18,7 @@ import { ResultHero } from "@/components/ResultHero";
 import { ClaudeAnalysis, AnalysisSkeleton } from "@/components/ClaudeAnalysis";
 import { InlineImageAnalysis } from "@/components/InlineImageAnalysis";
 import { cn } from "@/lib/utils";
+import { ReportButton } from "@/components/ReportButton";
 
 // ── Barcode validation ───────────────────────────────────────
 
@@ -124,7 +125,7 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
       <ResultHero verdict={verdict} confidence={confidence} />
 
       {/* ── Content ── */}
-      <div className="mx-auto max-w-lg space-y-4 px-5 py-8">
+      <div className="mx-auto max-w-lg space-y-4 px-8 py-8">
         {/* Combined-result badge — shown when sessionId resolved */}
         {combinedResult && (
           <CombinedBadge
@@ -181,18 +182,21 @@ function CombinedBadge({
   return (
     <div
       className="flex items-center gap-3 rounded-xl px-4 py-3"
-      style={{ backgroundColor: "#F0F7F4", borderRadius: 12 }}
+      style={{ backgroundColor: "rgba(125,201,138,0.08)", borderRadius: 12 }}
     >
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary">
+      <span
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+        style={{ backgroundColor: "rgba(125,201,138,0.2)" }}
+      >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-          <path d="M2.5 7L5.5 10L11.5 4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2.5 7L5.5 10L11.5 4" stroke="#7dc98a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </span>
       <div className="min-w-0">
-        <p className="font-rethink text-sm font-medium text-primary">
+        <p className="font-syne text-sm font-medium text-lime">
           Combined analysis complete
         </p>
-        <p className="font-rethink text-xs text-text-secondary">
+        <p className="font-syne text-xs text-text-secondary">
           Barcode {barcodeConfidence ?? "—"}% · Image {imageConfidence ?? "—"}%
         </p>
       </div>
@@ -205,24 +209,24 @@ function CombinedBadge({
 function ProductCard({ product, barcode }: { product: Product; barcode: string }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-      <p className="font-fraunces text-2xl font-semibold text-primary">
+      <p className="font-syne text-2xl font-semibold text-lime">
         {product.brand}
       </p>
-      <h2 className="mt-1 font-rethink text-lg font-semibold text-text-primary">
+      <h2 className="mt-1 font-syne text-lg font-semibold text-text-primary">
         {product.name}
       </h2>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <span className="rounded-full bg-primary px-3 py-1 font-rethink text-xs font-medium capitalize text-white">
+        <span className="rounded-full px-3 py-1 font-syne text-xs font-medium capitalize text-lime" style={{ backgroundColor: "rgba(125,201,138,0.12)" }}>
           {product.category}
         </span>
         {product.country_of_manufacture && (
-          <span className="font-rethink text-xs text-text-secondary">
+          <span className="font-syne text-xs text-text-secondary">
             Made in {product.country_of_manufacture}
           </span>
         )}
         {product.size_ml && (
-          <span className="font-rethink text-xs text-text-secondary">
+          <span className="font-syne text-xs text-text-secondary">
             {product.size_ml} ml
           </span>
         )}
@@ -234,10 +238,10 @@ function ProductCard({ product, barcode }: { product: Product; barcode: string }
 
       {product.packaging_notes && (
         <div className="mt-4 rounded-lg bg-background px-4 py-3">
-          <p className="mb-1 font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary">
+          <p className="mb-1 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">
             Packaging note
           </p>
-          <p className="font-rethink text-sm leading-relaxed text-text-primary">
+          <p className="font-syne text-sm leading-relaxed text-text-primary">
             {product.packaging_notes}
           </p>
         </div>
@@ -245,14 +249,14 @@ function ProductCard({ product, barcode }: { product: Product; barcode: string }
 
       {product.authenticated_retailers.length > 0 && (
         <div className="mt-4">
-          <p className="mb-2 font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary">
+          <p className="mb-2 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">
             Authorised retailers
           </p>
           <div className="flex flex-wrap gap-2">
             {product.authenticated_retailers.map((retailer) => (
               <span
                 key={retailer}
-                className="rounded-md border border-border bg-background px-2.5 py-1 font-rethink text-xs text-text-primary"
+                className="rounded-md border border-border bg-background px-2.5 py-1 font-syne text-xs text-text-primary"
               >
                 {retailer}
               </span>
@@ -276,7 +280,7 @@ function ExternalProductCard({
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
       {/* Source badge */}
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 font-rethink text-xs text-text-secondary">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 font-syne text-xs text-text-secondary">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
           <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" />
           <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
@@ -285,17 +289,17 @@ function ExternalProductCard({
       </span>
 
       {product.brand && (
-        <p className="mt-3 font-fraunces text-2xl font-semibold text-primary">
+        <p className="mt-3 font-syne text-2xl font-semibold text-lime">
           {product.brand}
         </p>
       )}
-      <h2 className="mt-1 font-rethink text-lg font-semibold text-text-primary">
+      <h2 className="mt-1 font-syne text-lg font-semibold text-text-primary">
         {product.name}
       </h2>
 
       {product.category && (
         <div className="mt-4">
-          <span className="rounded-full bg-primary/10 px-3 py-1 font-rethink text-xs font-medium capitalize text-primary">
+          <span className="rounded-full px-3 py-1 font-syne text-xs font-medium capitalize text-lime" style={{ backgroundColor: "rgba(125,201,138,0.12)" }}>
             {product.category}
           </span>
         </div>
@@ -305,7 +309,7 @@ function ExternalProductCard({
         {barcode}
       </p>
 
-      <p className="mt-4 font-rethink text-xs leading-relaxed text-text-secondary">
+      <p className="mt-4 font-syne text-xs leading-relaxed text-text-secondary">
         This product was identified in an external database but is not yet in our verified records. The barcode format is valid — this is likely a genuine product we have not assessed yet.
       </p>
     </div>
@@ -327,7 +331,7 @@ function AdvisoryBlock({ verdict }: { verdict: "unverified" | "suspicious" }) {
           : "rgba(224, 123, 42, 0.07)",
       }}
     >
-      <p className="font-rethink text-[15px] leading-relaxed text-text-primary">
+      <p className="font-syne text-[15px] leading-relaxed text-text-primary">
         {isSuspicious
           ? "This barcode does not match a recognised product format and may indicate a counterfeit or tampered label. Do not use this product until verified. Purchase only from authorised retailers."
           : "We couldn\u2019t verify this product in our database. It may be unlisted, a regional variant, or potentially counterfeit. Purchase only from authorised retailers."}
@@ -346,25 +350,25 @@ function PhotoUpsellBlock() {
     >
       <span
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-        style={{ backgroundColor: "rgba(26, 60, 46, 0.08)" }}
+        style={{ backgroundColor: "rgba(125,201,138,0.12)" }}
       >
-        <Camera size={18} strokeWidth={1.8} className="text-primary" />
+        <Camera size={18} strokeWidth={1.8} className="text-lime" />
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="font-rethink text-sm font-medium text-text-primary">
+        <p className="font-syne text-sm font-medium text-text-primary">
           Want a more detailed analysis?
         </p>
-        <p className="mt-0.5 font-rethink text-sm text-text-secondary">
+        <p className="mt-0.5 font-syne text-sm text-text-secondary">
           Upload a photo of your packaging for an AI-powered visual check of
           fonts, print quality, and logo accuracy.
         </p>
         <Link
-          href="/scan"
+          href="/"
           className={cn(
             "mt-3 inline-flex items-center gap-1.5",
-            "font-rethink text-sm font-medium text-primary",
-            "hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            "font-syne text-sm font-medium text-lime",
+            "hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime/50"
           )}
         >
           Upload packaging photo
@@ -383,25 +387,25 @@ function ActionButtons() {
   return (
     <div className="flex flex-col gap-3 pt-2 sm:flex-row">
       <Link
-        href="/scan"
+        href="/"
         className={cn(
           "flex flex-1 items-center justify-center rounded-xl px-6 py-3",
-          "bg-primary font-rethink text-base font-medium text-white",
-          "transition-colors hover:bg-primary/90 active:scale-[0.98]"
+          "font-syne text-base font-medium text-[#0b1e0f]",
+          "transition-colors active:scale-[0.98]"
         )}
+        style={{ backgroundColor: "#7dc98a" }}
       >
         Scan Another Product
       </Link>
-      <Link
-        href="/report"
+      <ReportButton
+        label="Report This Product"
         className={cn(
           "flex flex-1 items-center justify-center rounded-xl border px-6 py-3",
-          "border-primary font-rethink text-base font-medium text-primary",
-          "transition-colors hover:bg-primary/5 active:scale-[0.98]"
+          "font-syne text-base font-medium text-lime",
+          "transition-colors active:scale-[0.98]"
         )}
-      >
-        Report This Product
-      </Link>
+        style={{ borderColor: "rgba(125,201,138,0.35)", background: "transparent", cursor: "pointer" }}
+      />
     </div>
   );
 }
