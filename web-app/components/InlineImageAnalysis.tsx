@@ -79,11 +79,11 @@ function InlineResultDisplay({ result }: { result: InlineResult }) {
     >
       {/* Compact verdict banner */}
       <div
-        className="flex items-center gap-4 rounded-2xl px-6 py-5 text-white"
+        className="flex items-center gap-4 rounded-2xl px-4 sm:px-6 py-4 sm:py-5 text-white"
         style={{ backgroundColor: bg, borderRadius: 16 }}
       >
         <div>
-          <p className="font-syne text-2xl font-semibold leading-none">{label}</p>
+          <p className="font-syne text-xl sm:text-2xl font-semibold leading-none">{label}</p>
           <p className="mt-1 font-mono text-sm opacity-80">{result.confidence}% confidence</p>
           {result.summary && (
             <p className="mt-2 font-syne text-sm leading-relaxed opacity-85">

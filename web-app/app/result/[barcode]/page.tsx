@@ -125,7 +125,7 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
       <ResultHero verdict={verdict} confidence={confidence} />
 
       {/* ── Content ── */}
-      <div className="mx-auto max-w-lg space-y-4 px-8 py-8">
+      <div className="mx-auto max-w-lg space-y-4 px-4 sm:px-6 md:px-8 py-6 sm:py-8">
         {/* Combined-result badge — shown when sessionId resolved */}
         {combinedResult && (
           <CombinedBadge
@@ -209,10 +209,10 @@ function CombinedBadge({
 function ProductCard({ product, barcode }: { product: Product; barcode: string }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-      <p className="font-syne text-2xl font-semibold text-lime">
+      <p className="font-syne text-xl sm:text-2xl font-semibold text-lime">
         {product.brand}
       </p>
-      <h2 className="mt-1 font-syne text-lg font-semibold text-text-primary">
+      <h2 className="mt-1 font-syne text-base sm:text-lg font-semibold text-text-primary">
         {product.name}
       </h2>
 
@@ -289,11 +289,11 @@ function ExternalProductCard({
       </span>
 
       {product.brand && (
-        <p className="mt-3 font-syne text-2xl font-semibold text-lime">
+        <p className="mt-3 font-syne text-xl sm:text-2xl font-semibold text-lime">
           {product.brand}
         </p>
       )}
-      <h2 className="mt-1 font-syne text-lg font-semibold text-text-primary">
+      <h2 className="mt-1 font-syne text-base sm:text-lg font-semibold text-text-primary">
         {product.name}
       </h2>
 

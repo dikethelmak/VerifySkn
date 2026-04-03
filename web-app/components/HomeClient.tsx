@@ -152,15 +152,16 @@ const VERDICT_COLORS: Record<string, string> = {
 // ── Report Modal ──────────────────────────────────────────────
 
 interface ReportModalProps {
-  barcode:         string;
-  onClose:         () => void;
-  prefillIssues?:  ReportIssue[];
-  prefillDesc?:    string;
+  barcode:          string;
+  onClose:          () => void;
+  prefillIssues?:   ReportIssue[];
+  prefillDesc?:     string;
+  prefillImages?:   ReportImage[];
 }
 
-function ReportModal({ barcode: initialBarcode, onClose, prefillIssues = [], prefillDesc = "" }: ReportModalProps) {
+function ReportModal({ barcode: initialBarcode, onClose, prefillIssues = [], prefillDesc = "", prefillImages = [] }: ReportModalProps) {
   const [barcode,     setBarcode]     = useState(initialBarcode);
-  const [images,      setImages]      = useState<ReportImage[]>([]);
+  const [images,      setImages]      = useState<ReportImage[]>(prefillImages);
   const [issues,      setIssues]      = useState<ReportIssue[]>(prefillIssues);
   const [description, setDescription] = useState(prefillDesc);
   const [submitting,  setSubmitting]  = useState(false);
@@ -484,12 +485,13 @@ export function HomeClient() {
   const [phase,  setPhase]  = useState<Phase>("idle");
   const [result, setResult] = useState<ProductData | null>(null);
   const [showReport,    setShowReport]    = useState(false);
-  const [reportPrefill, setReportPrefill] = useState<{ issues: ReportIssue[]; desc: string }>({ issues: [], desc: "" });
+  const [reportPrefill, setReportPrefill] = useState<{ issues: ReportIssue[]; desc: string; images: ReportImage[] }>({ issues: [], desc: "", images: [] });
 
   // Deep analysis state
   const [deepPhase,  setDeepPhase]  = useState<UploadPhase>("idle");
   const [deepError,  setDeepError]  = useState<string | null>(null);
   const [deepResult, setDeepResult] = useState<DeepResult | null>(null);
+  const [deepImage,  setDeepImage]  = useState<ReportImage | null>(null);
 
   // ── Lookup ──────────────────────────────────────────────────
   const lookup = useCallback(async (code: string) => {
@@ -523,13 +525,20 @@ export function HomeClient() {
     setDeepPhase("idle");
     setDeepError(null);
     setDeepResult(null);
+    setDeepImage(null);
   };
 
   // ── Deep analysis ───────────────────────────────────────────
-  const handleDeepImageReady = useCallback(async (base64: string, mimeType: string) => {
+  const handleDeepImageReady = useCallback(async (base64: string, mimeType: string, fileName?: string) => {
     setDeepPhase("analyzing");
     setDeepError(null);
     setDeepResult(null);
+    setDeepImage({
+      preview:  `data:${mimeType};base64,${base64}`,
+      base64,
+      mimeType,
+      name:     fileName ?? "packaging.jpg",
+    });
     try {
       const res = await fetch("/api/analyse-product", {
         method:  "POST",
@@ -586,12 +595,12 @@ export function HomeClient() {
 
   return (
     <div
-      className="-mt-14 flex h-screen flex-col overflow-hidden"
+      className="-mt-14 flex min-h-screen flex-col overflow-auto lg:h-screen lg:overflow-hidden"
       style={{ background: C.forestDeep, color: "#fff", fontFamily: UI }}
     >
       {/* ── Navbar ── */}
       <nav
-        className="flex flex-shrink-0 items-center justify-between px-8"
+        className="flex flex-shrink-0 items-center justify-between px-4 sm:px-8"
         style={{ background: C.forest, borderBottom: `0.5px solid ${C.border}`, height: "56px" }}
       >
         <button
@@ -601,7 +610,7 @@ export function HomeClient() {
         >
           .verify<span style={{ color: C.lime }}>skn</span>
         </button>
-        <div className="hidden items-center gap-7 md:flex">
+        <div className="flex items-center gap-7">
           <Link
             href="/about"
             className="text-xs transition-colors hover:text-white"
@@ -613,11 +622,11 @@ export function HomeClient() {
       </nav>
 
       {/* ── Main split ── */}
-      <div className="flex flex-1 overflow-hidden flex-col lg:grid lg:grid-cols-2">
+      <div className="flex flex-1 flex-col lg:grid lg:grid-cols-2 lg:overflow-hidden">
 
         {/* ════════ LEFT PANEL ════════ */}
         <div
-          className="flex flex-col overflow-hidden px-10 py-8"
+          className="flex flex-col overflow-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:overflow-hidden"
           style={{ background: C.forest, borderRight: `0.5px solid ${C.border}` }}
         >
           <h1
@@ -796,7 +805,7 @@ export function HomeClient() {
 
         {/* ════════ RIGHT PANEL ════════ */}
         <div
-          className="flex flex-col overflow-y-auto px-10 py-10"
+          className="flex flex-col overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10"
           style={{ background: C.forestMid }}
         >
 
@@ -942,7 +951,7 @@ export function HomeClient() {
                       Full analysis
                     </Link>
                     <button
-                      onClick={() => { setReportPrefill({ issues: [], desc: "" }); setShowReport(true); }}
+                      onClick={() => { setReportPrefill({ issues: [], desc: "", images: [] }); setShowReport(true); }}
                       className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
                       style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}`, color: C.red, cursor: "pointer", fontFamily: UI }}
                     >
@@ -1072,7 +1081,7 @@ export function HomeClient() {
                     const issues: ReportIssue[] = deepResult.result === "suspicious" ? ["counterfeit"] : deepResult.result === "unverified" ? ["wrong_info"] : [];
                     const flags = deepResult.flags.length > 0 ? `Flags:\n${deepResult.flags.map(f => `• ${f}`).join("\n")}` : "";
                     const desc = [deepResult.summary, flags].filter(Boolean).join("\n\n");
-                    setReportPrefill({ issues, desc });
+                    setReportPrefill({ issues, desc, images: deepImage ? [deepImage] : [] });
                     setShowReport(true);
                   }}
                   className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
@@ -1088,7 +1097,7 @@ export function HomeClient() {
       </div>
 
       {/* ── Bottom bar ── */}
-      <div className="flex flex-shrink-0 items-center justify-between px-8 py-2.5"
+      <div className="flex flex-shrink-0 items-center justify-between px-4 sm:px-8 py-2.5"
         style={{ background: C.forestDeep, borderTop: `0.5px solid ${C.border}` }}>
         <span className="text-xs" style={{ color: C.w25, fontFamily: MONO }}>SkinCare Registry v2.4.0</span>
         <span className="text-xs" style={{ color: C.w25, fontFamily: MONO }}>© 2026 VerifySkn</span>
@@ -1100,6 +1109,7 @@ export function HomeClient() {
           barcode={result?.barcode || serial}
           prefillIssues={reportPrefill.issues}
           prefillDesc={reportPrefill.desc}
+          prefillImages={reportPrefill.images}
           onClose={() => setShowReport(false)}
         />
       )}

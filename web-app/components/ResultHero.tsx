@@ -37,7 +37,7 @@ export function ResultHero({ verdict, confidence, summary }: ResultHeroProps) {
 
   return (
     <section
-      className="flex w-full flex-col items-center justify-center px-8 py-16 text-white"
+      className="flex w-full flex-col items-center justify-center px-4 py-10 sm:px-8 sm:py-16 text-white"
       style={{ backgroundColor: bg }}
     >
       {/* Status icon — scale up + fade in */}
@@ -47,7 +47,7 @@ export function ResultHero({ verdict, confidence, summary }: ResultHeroProps) {
         transition={{ type: "spring", stiffness: 280, damping: 22 }}
         className="mb-6"
       >
-        <Icon className="h-20 w-20 drop-shadow-md" />
+        <Icon className="h-14 w-14 sm:h-20 sm:w-20 drop-shadow-md" />
       </motion.div>
 
       {/* Result label — Fraunces 600 48px */}
@@ -55,7 +55,7 @@ export function ResultHero({ verdict, confidence, summary }: ResultHeroProps) {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.18, duration: 0.35, ease: "easeOut" }}
-        className="font-fraunces text-5xl font-semibold leading-none"
+        className="font-fraunces text-4xl sm:text-5xl font-semibold leading-none"
       >
         {label}
       </motion.h1>
@@ -76,7 +76,7 @@ export function ResultHero({ verdict, confidence, summary }: ResultHeroProps) {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 0.85, y: 0 }}
           transition={{ delay: 0.48, duration: 0.35, ease: "easeOut" }}
-          className="mt-4 max-w-sm text-center font-syne text-base font-normal leading-relaxed"
+          className="mt-4 max-w-xs sm:max-w-sm text-center font-syne text-sm sm:text-base font-normal leading-relaxed"
         >
           {summary}
         </motion.p>

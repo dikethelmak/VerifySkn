@@ -178,17 +178,15 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
       {/* ── Table ── */}
       <div className="mt-4 overflow-x-auto rounded-2xl border border-border bg-surface shadow-sm">
         {filtered.length > 0 ? (
-          <table className="w-full min-w-[600px] border-collapse text-left">
+          <table className="w-full min-w-[360px] sm:min-w-[600px] border-collapse text-left">
             <thead>
               <tr className="border-b border-border">
-                {["Date", "Barcode", "Product", "Result", "Type", "Confidence"].map((h) => (
-                  <th
-                    key={h}
-                    className="px-5 py-3.5 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary"
-                  >
-                    {h}
-                  </th>
-                ))}
+                <th className="hidden sm:table-cell px-3 sm:px-5 py-3 sm:py-3.5 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">Date</th>
+                <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">Barcode</th>
+                <th className="hidden sm:table-cell px-3 sm:px-5 py-3 sm:py-3.5 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">Product</th>
+                <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">Result</th>
+                <th className="hidden sm:table-cell px-3 sm:px-5 py-3 sm:py-3.5 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">Type</th>
+                <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-syne text-xs font-medium uppercase tracking-widest text-text-secondary">Score</th>
               </tr>
             </thead>
             <tbody>
@@ -202,18 +200,18 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
                       !isLast && "border-b border-border"
                     )}
                   >
-                    <td className="whitespace-nowrap px-5 py-4 font-syne text-sm text-text-secondary">
+                    <td className="hidden sm:table-cell whitespace-nowrap px-3 sm:px-5 py-3 sm:py-4 font-syne text-sm text-text-secondary">
                       {formatDate(log.scanned_at)}
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-3 sm:px-5 py-3 sm:py-4">
                       <Link
                         href={`/result/${encodeURIComponent(log.barcode_scanned)}`}
-                        className="font-mono text-sm text-lime underline-offset-2 hover:underline"
+                        className="font-mono text-xs sm:text-sm text-lime underline-offset-2 hover:underline"
                       >
                         {log.barcode_scanned}
                       </Link>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="hidden sm:table-cell px-3 sm:px-5 py-3 sm:py-4">
                       {log.product ? (
                         <div>
                           <p className="font-syne text-sm font-medium text-text-primary">
@@ -229,10 +227,10 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
                         </span>
                       )}
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-3 sm:px-5 py-3 sm:py-4">
                       <VerdictBadge verdict={log.result} />
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="hidden sm:table-cell px-3 sm:px-5 py-3 sm:py-4">
                       {log.hasCombined ? (
                         <Camera
                           size={15}
@@ -249,7 +247,7 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
                         />
                       )}
                     </td>
-                    <td className="px-5 py-4 font-mono text-sm text-text-secondary">
+                    <td className="px-3 sm:px-5 py-3 sm:py-4 font-mono text-xs sm:text-sm text-text-secondary">
                       {log.confidence_score}%
                     </td>
                   </tr>
@@ -258,7 +256,7 @@ export function HistoryFilters({ logs, totalCount, page, totalPages }: Props) {
             </tbody>
           </table>
         ) : (
-          <div className="flex flex-col items-center justify-center px-5 py-16 text-center">
+          <div className="flex flex-col items-center justify-center px-4 sm:px-5 py-10 sm:py-16 text-center">
             <p className="font-syne text-lg text-text-secondary">No matching scans</p>
             <p className="mt-1 font-syne text-sm text-text-secondary">
               Try adjusting the filters above.

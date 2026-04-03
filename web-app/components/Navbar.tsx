@@ -23,7 +23,7 @@ export function Navbar() {
 
   return (
     <header
-      className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-8"
+      className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-4 sm:px-8"
       style={{ background: FOREST, borderBottom: `0.5px solid ${BORDER}`, height: "56px" }}
     >
       {/* ── Wordmark ── */}
@@ -37,7 +37,7 @@ export function Navbar() {
 
       {/* ── Links ── */}
       {visibleNav.length > 0 && (
-        <div className="hidden items-center gap-7 md:flex">
+        <div className="flex items-center gap-7">
           {visibleNav.map(({ label, href }) => (
             <Link
               key={href}

@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 // ── Types ─────────────────────────────────────────────────────
 
 interface ImageUploaderProps {
-  onImageReady: (base64: string, mimeType: string) => void;
+  onImageReady: (base64: string, mimeType: string, fileName?: string) => void;
   className?: string;
 }
 
@@ -92,7 +92,7 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
 
   const handleAnalyse = useCallback(() => {
     if (!fileState) return;
-    onImageReady(fileState.base64, fileState.file.type);
+    onImageReady(fileState.base64, fileState.file.type, fileState.file.name);
   }, [fileState, onImageReady]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -197,7 +197,7 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
             </div>
 
             {/* File meta + actions */}
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="truncate font-mono text-xs text-text-primary">
                   {fileState.file.name}
@@ -207,14 +207,14 @@ export function ImageUploader({ onImageReady, className }: ImageUploaderProps) {
                 </p>
               </div>
 
-              <div className="flex shrink-0 items-center gap-4">
+              <div className="flex flex-1 items-center gap-3">
                 <button
                   onClick={handleRemove}
-                  className="font-syne text-sm font-medium text-danger hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50 focus-visible:ring-offset-1"
+                  className="shrink-0 font-syne text-sm font-medium text-danger hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50 focus-visible:ring-offset-1"
                 >
                   Remove
                 </button>
-                <Button variant="primary" size="md" onClick={handleAnalyse}>
+                <Button variant="primary" size="md" onClick={handleAnalyse} className="flex-1 sm:flex-none">
                   Analyse Packaging
                 </Button>
               </div>

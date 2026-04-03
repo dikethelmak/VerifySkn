@@ -54,9 +54,9 @@ export default async function HistoryPage({ searchParams }: PageProps) {
   const hasAnyLogs = (count ?? 0) > 0;
 
   return (
-    <div className="mx-auto max-w-5xl px-8 py-12">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 md:px-8 py-8 sm:py-12">
       {/* Heading */}
-      <h1 className="font-syne text-4xl font-semibold text-text-primary">
+      <h1 className="font-syne text-2xl sm:text-3xl md:text-4xl font-semibold text-text-primary">
         Scan History
       </h1>
       <p className="mt-1 font-syne text-sm text-text-secondary">
@@ -72,7 +72,7 @@ export default async function HistoryPage({ searchParams }: PageProps) {
           totalPages={totalPages}
         />
       ) : (
-        <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-border bg-surface px-5 py-20 text-center shadow-sm">
+        <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-border bg-surface px-4 sm:px-5 py-12 sm:py-20 text-center shadow-sm">
           <p className="font-syne text-xl text-text-secondary">No scans yet</p>
           <p className="mt-2 font-syne text-sm text-text-secondary">
             Head to the scan page to verify your first product.

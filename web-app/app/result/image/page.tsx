@@ -300,12 +300,12 @@ function ImageResultContent() {
     <main className="min-h-screen bg-background">
       <ResultHero verdict={data.result} confidence={data.confidence} summary={data.summary || undefined} />
 
-      <div className="mx-auto max-w-lg space-y-4 px-8 py-8">
+      <div className="mx-auto max-w-lg space-y-4 px-4 sm:px-6 md:px-8 py-6 sm:py-8">
         <section>
-          <h2 className="mb-3 font-syne text-sm font-semibold uppercase tracking-widest text-text-secondary">
+          <h2 className="mb-3 font-syne text-xs sm:text-sm font-semibold uppercase tracking-widest text-text-secondary">
             Packaging Checks
           </h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3">
             {CHECKS.map((check, i) => (
               <motion.div
                 key={check.key}
