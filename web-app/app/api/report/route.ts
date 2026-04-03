@@ -11,6 +11,49 @@ const MAX_IMAGES    = 3
 const MAX_B64_CHARS = 5 * 1024 * 1024 * 1.37  // ~5 MB of raw data in base64
 const MAX_PAYLOAD   = 20 * 1024 * 1024          // 20 MB total
 
+const REPORT_EMAIL  = process.env.REPORT_EMAIL_RECIPIENT ?? 'dikethelmak@gmail.com'
+
+// ── IP rate limiting ──────────────────────────────────────────
+// Module-level: shared across warm instances, not persisted across cold starts.
+// Provides a meaningful guard against rapid-fire abuse from a single IP.
+
+const RATE_LIMIT_MAX      = 5    // max reports per window
+const RATE_LIMIT_WINDOW   = 60 * 60 * 1000  // 1 hour in ms
+const ipReportCounts = new Map<string, { count: number; resetAt: number }>()
+
+function isRateLimited(ip: string): boolean {
+  const now   = Date.now()
+  const entry = ipReportCounts.get(ip)
+  if (!entry || now > entry.resetAt) {
+    ipReportCounts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW })
+    return false
+  }
+  entry.count++
+  return entry.count > RATE_LIMIT_MAX
+}
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    request.headers.get('x-real-ip') ??
+    'unknown'
+  )
+}
+
+// ── Origin validation ─────────────────────────────────────────
+
+const ALLOWED_ORIGINS = new Set([
+  process.env.NEXT_PUBLIC_SITE_URL,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+  'http://localhost:3000',
+  'http://localhost:3001',
+].filter(Boolean) as string[])
+
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return true  // server-side / non-browser requests
+  return ALLOWED_ORIGINS.has(origin)
+}
+
 const ISSUE_LABELS: Record<string, string> = {
   counterfeit: 'Counterfeit / Fake',
   mislabelled: 'Mislabelled Packaging',
@@ -42,6 +85,21 @@ function escapeHtml(str: string): string {
 // ── Route handler ─────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
+  // Origin check — reject cross-origin requests from unknown domains
+  const origin = request.headers.get('origin')
+  if (!isAllowedOrigin(origin)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // IP-based rate limit
+  const ip = getClientIp(request)
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: 'Too many reports — please wait before submitting again.' },
+      { status: 429 }
+    )
+  }
+
   // Reject oversized payloads before parsing
   const contentLength = Number(request.headers.get('content-length') ?? 0)
   if (contentLength > MAX_PAYLOAD) {
@@ -58,9 +116,9 @@ export async function POST(request: NextRequest) {
   }
 
   // ── Validate barcode ───────────────────────────────────────
-  const barcode = typeof body.barcode === 'string'
-    ? body.barcode.trim().slice(0, 50)
-    : ''
+  // Accept only digit-only barcodes (EAN-8 through EAN-14, UPC variants)
+  const rawBarcode = typeof body.barcode === 'string' ? body.barcode.trim() : ''
+  const barcode    = /^\d{6,14}$/.test(rawBarcode) ? rawBarcode : ''
 
   // ── Validate images ────────────────────────────────────────
   const rawImages = Array.isArray(body.images) ? body.images.slice(0, MAX_IMAGES) : []
@@ -154,7 +212,7 @@ export async function POST(request: NextRequest) {
   try {
     await transporter.sendMail({
       from: `VerifySkn Reports <${process.env.GMAIL_USER}>`,
-      to: 'dikethelmak@gmail.com',
+      to: REPORT_EMAIL,
       subject: `New Report${barcode ? ` — ${barcode}` : ''}: ${issueList}`,
       html,
       attachments,

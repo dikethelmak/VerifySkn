@@ -1,16 +1,33 @@
 // Generic daily rate limiter for external free-tier APIs.
 // Uses api_call_counters in Supabase for atomic, serverless-safe counting.
-// Fails open — a counter failure never blocks a user scan.
+// Falls back to a module-level in-memory counter when Supabase is unavailable
+// rather than failing completely open.
 
 import { createClient } from '@/lib/supabase/server'
 
+// Emergency in-memory fallback: per-service, per-day counters
+// for use only when the Supabase RPC is unavailable.
+const EMERGENCY_LIMIT = 5
+const emergencyCounters: Record<string, { count: number; date: string }> = {}
+
+function emergencyCheck(service: string): boolean {
+  const today = new Date().toISOString().slice(0, 10)
+  const entry = emergencyCounters[service]
+  if (!entry || entry.date !== today) {
+    emergencyCounters[service] = { count: 1, date: today }
+    return true
+  }
+  entry.count++
+  return entry.count <= EMERGENCY_LIMIT
+}
+
 export async function checkApiLimit(
-  service: string,
-  maxPerDay: number
+  service:    string,
+  maxPerDay:  number
 ): Promise<boolean> {
   try {
     const supabase = createClient()
-    const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+    const today = new Date().toISOString().slice(0, 10)
 
     const { data, error } = await supabase.rpc('increment_api_counter', {
       p_service: service,
@@ -18,8 +35,8 @@ export async function checkApiLimit(
     })
 
     if (error) {
-      console.error(`[api-rate-limiter] Counter RPC failed for ${service} (allowing):`, error)
-      return true // fail open
+      console.error(`[api-rate-limiter] RPC failed for ${service}, using emergency limit:`, error)
+      return emergencyCheck(service)
     }
 
     const count = data as number
@@ -30,7 +47,7 @@ export async function checkApiLimit(
 
     return true
   } catch (err) {
-    console.error(`[api-rate-limiter] Unexpected error for ${service} (allowing):`, err)
-    return true // fail open
+    console.error(`[api-rate-limiter] Unexpected error for ${service}, using emergency limit:`, err)
+    return emergencyCheck(service)
   }
 }

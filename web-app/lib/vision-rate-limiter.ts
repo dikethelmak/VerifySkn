@@ -2,14 +2,20 @@ import { createClient } from '@/lib/supabase/server'
 
 const DEFAULT_MAX_DAILY = 500
 
+// When Supabase is unavailable, fall back to a module-level in-memory counter.
+// In serverless, warm instances share this state briefly — enough to prevent
+// a complete fail-open during an outage window.
+const EMERGENCY_LIMIT = 10
+let emergencyCount = 0
+let emergencyDate  = ''
+
 export interface RateLimitResult {
   allowed: boolean
-  count: number
-  limit: number
+  count:   number
+  limit:   number
 }
 
 export async function checkDailyVisionLimit(): Promise<RateLimitResult> {
-  // Fix 10: guard against NaN from a malformed env var
   const parsed = parseInt(process.env.MAX_DAILY_VISION_CALLS ?? '', 10)
   const limit  = Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_DAILY
 
@@ -23,15 +29,18 @@ export async function checkDailyVisionLimit(): Promise<RateLimitResult> {
     })
 
     if (error) {
-      // Counter failure must never block users
-      console.error('[vision-rate-limiter] Counter RPC failed (allowing request):', error)
-      return { allowed: true, count: 0, limit }
+      console.error('[vision-rate-limiter] Counter RPC failed, using emergency limit:', error)
+      if (emergencyDate !== today) { emergencyCount = 0; emergencyDate = today }
+      emergencyCount++
+      return { allowed: emergencyCount <= EMERGENCY_LIMIT, count: emergencyCount, limit: EMERGENCY_LIMIT }
     }
 
     const count = data as number
     return { allowed: count <= limit, count, limit }
   } catch (err) {
-    console.error('[vision-rate-limiter] Unexpected error (allowing request):', err)
-    return { allowed: true, count: 0, limit }
+    console.error('[vision-rate-limiter] Unexpected error, using emergency limit:', err)
+    if (emergencyDate !== today) { emergencyCount = 0; emergencyDate = today }
+    emergencyCount++
+    return { allowed: emergencyCount <= EMERGENCY_LIMIT, count: emergencyCount, limit: EMERGENCY_LIMIT }
   }
 }

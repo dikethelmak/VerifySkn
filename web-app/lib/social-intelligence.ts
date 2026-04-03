@@ -89,6 +89,19 @@ export async function getSocialIntelligence(
 // ── Prompt injection ──────────────────────────────────────────
 
 /**
+ * Strips characters that could be used for prompt injection before
+ * community-sourced text is embedded in an LLM prompt.
+ */
+function sanitizeForPrompt(text: string): string {
+  return text
+    .replace(/[\n\r\t]/g, ' ')   // flatten whitespace
+    .replace(/[`<>{}[\]]/g, '')  // strip brackets and backticks
+    .replace(/\s{2,}/g, ' ')     // collapse runs of spaces
+    .trim()
+    .slice(0, 120)               // hard cap so one entry can't overflow context
+}
+
+/**
  * Formats known fake patterns for injection into the Gemini/Groq vision prompt.
  * Returns an empty string if there are no patterns worth surfacing.
  */
@@ -96,12 +109,13 @@ export function formatPatternsForPrompt(signal: SocialSignal): string {
   const patterns = signal.known_fake_patterns.filter((p) => p.ai_confidence >= 60)
   if (patterns.length === 0) return ''
 
+  const safeBrand = sanitizeForPrompt(signal.brand)
   const lines = patterns.map(
-    (p) => `- ${p.marker_type.toUpperCase()}: ${p.description} (reported ${p.occurrence_count}x)`
+    (p) => `- ${sanitizeForPrompt(p.marker_type).toUpperCase()}: ${sanitizeForPrompt(p.description)} (reported ${p.occurrence_count}x)`
   )
 
   return (
-    `\n\nKNOWN FAKE TELLS FOR ${signal.brand.toUpperCase()} (crowdsourced from community reports):\n` +
+    `\n\nKNOWN FAKE TELLS FOR ${safeBrand.toUpperCase()} (crowdsourced from community reports):\n` +
     lines.join('\n') +
     '\nPay special attention to these specific patterns when analysing this product.'
   )

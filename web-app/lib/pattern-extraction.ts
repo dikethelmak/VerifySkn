@@ -26,11 +26,20 @@ interface ExtractedPattern {
 
 // ── Gemini Vision call ────────────────────────────────────────
 
+function sanitizeBrand(brand: string): string {
+  return brand
+    .replace(/[^a-zA-Z0-9\s\-&.']/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+    .slice(0, 80)
+}
+
 async function callGemini(
   images: { base64: string; mimeType: string }[],
   brand: string
 ): Promise<ExtractedPattern[]> {
-  const prompt = `You are a counterfeit product detection expert analysing images of a suspected fake ${brand} product.
+  const safeBrand = sanitizeBrand(brand)
+  const prompt = `You are a counterfeit product detection expert analysing images of a suspected fake ${safeBrand} product.
 
 Identify specific, observable visual markers that indicate this product is counterfeit.
 Only include markers clearly visible in the provided images.

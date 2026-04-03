@@ -18,8 +18,9 @@ import { createClient } from '@/lib/supabase/server'
 
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
-const BATCH_SIZE = 20      // entries per run
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024  // 4 MB
+const BATCH_SIZE             = 20   // entries per run
+const MAX_IMAGE_BYTES        = 4 * 1024 * 1024  // 4 MB
+const MAX_VISION_CALLS_PER_RUN = 30  // hard cap on Gemini vision calls per cron trigger
 
 // ── Auth ──────────────────────────────────────────────────────
 
@@ -289,6 +290,7 @@ export async function POST(request: NextRequest) {
     let entriesProcessed  = 0
     let fakeReportsFound  = 0
     let markersExtracted  = 0
+    let visionCallsThisRun = 0
 
     // Track new fake reports per brand so we can update summaries once at the end
     const brandNewReports: Record<string, number> = {}
@@ -310,8 +312,13 @@ export async function POST(request: NextRequest) {
             markersExtracted++
           }
 
-          // ── Step 3: analyse images ──────────────────────
+          // ── Step 3: analyse images (capped per run) ────
           for (const imageUrl of (entry.image_urls as string[]) ?? []) {
+            if (visionCallsThisRun >= MAX_VISION_CALLS_PER_RUN) {
+              console.warn(`[process-social] Vision call cap (${MAX_VISION_CALLS_PER_RUN}) reached, skipping remaining images`)
+              break
+            }
+            visionCallsThisRun++
             const imageMarkers = await extractMarkersFromImage(imageUrl, entry.brand as string)
             for (const marker of imageMarkers) {
               if (marker.confidence < 60) continue
