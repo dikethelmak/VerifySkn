@@ -7,6 +7,7 @@ import { ImageUploader } from "@/components/ImageUploader";
 import { AnalysisLoader } from "@/components/AnalysisLoader";
 import type { ScanVerdict } from "@/lib/database.types";
 import { mapFlagLabel } from "@/lib/flagLabels";
+import { verdictLabel, confidenceTier } from "@/lib/verdictUtils";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -43,10 +44,10 @@ const BADGE_CONFIG: Record<CheckBadge, { label: string; bg: string; color: strin
   na:        { label: "N/A",       bg: "rgba(255,255,255,0.09)", color: "rgba(238,236,234,0.5)" },
 };
 
-const VERDICT_CONFIG: Record<ScanVerdict, { label: string; bg: string }> = {
-  authentic:  { label: "Authentic",  bg: "#2D7A4F" },
-  unverified: { label: "Unverified", bg: "#E07B2A" },
-  suspicious: { label: "Suspicious", bg: "#C0392B" },
+const VERDICT_CONFIG: Record<ScanVerdict, { bg: string }> = {
+  authentic:  { bg: "#2D7A4F" },
+  unverified: { bg: "#E07B2A" },
+  suspicious: { bg: "#C0392B" },
 };
 
 const CHECKS = [
@@ -69,7 +70,7 @@ function normalizeCheck(value: string | undefined | null): CheckBadge {
 // ── Sub-components ────────────────────────────────────────────
 
 function InlineResultDisplay({ result }: { result: InlineResult }) {
-  const { label, bg } = VERDICT_CONFIG[result.result];
+  const { bg } = VERDICT_CONFIG[result.result];
 
   return (
     <motion.div
@@ -84,8 +85,8 @@ function InlineResultDisplay({ result }: { result: InlineResult }) {
         style={{ backgroundColor: bg, borderRadius: 16 }}
       >
         <div>
-          <p className="font-syne text-xl sm:text-2xl font-semibold leading-none">{label}</p>
-          <p className="mt-1 font-mono text-sm opacity-80">{result.confidence}% confidence</p>
+          <p className="font-syne text-xl sm:text-2xl font-semibold leading-none">{verdictLabel(result.result)}</p>
+          <p className="mt-1 font-mono text-sm opacity-80">{result.confidence}% · {confidenceTier(result.confidence)}</p>
           {result.summary && (
             <p className="mt-2 font-syne text-sm leading-relaxed opacity-85">
               {result.summary}
@@ -165,8 +166,8 @@ function InlineResultDisplay({ result }: { result: InlineResult }) {
             >
               {result.finalConfidence}%
             </span>
-            <span className="font-syne text-sm capitalize text-text-secondary">
-              {result.finalResult}
+            <span className="font-syne text-sm text-text-secondary">
+              {verdictLabel(result.finalResult)}
             </span>
           </div>
           <p className="mt-1 font-syne text-xs text-text-secondary">

@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { ScanVerdict } from "@/lib/database.types";
 import { IMAGE_SESSION_KEY, type ImageAnalysisSession } from "@/lib/imageSession";
 import { mapFlagLabel } from "@/lib/flagLabels";
+import { verdictLabel, confidenceTier, buyAuthenticUrl, buyAuthenticLabel } from "@/lib/verdictUtils";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -142,7 +143,7 @@ function CombinedSection({ barcodeConfidence, imageConfidence, finalResult, fina
         >
           {finalConfidence}%
         </motion.span>
-        <span className="mb-1 font-syne text-sm capitalize text-text-secondary">{finalResult}</span>
+        <span className="mb-1 font-syne text-sm text-text-secondary">{verdictLabel(finalResult)}</span>
       </div>
       <p className="mt-1.5 font-syne text-[13px] text-text-secondary">
         Based on barcode verification and packaging analysis
@@ -208,21 +209,43 @@ function NoPackagingPrompt() {
   );
 }
 
-function ActionButtons() {
+function DisclosureText() {
   return (
-    <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-      <Link
-        href="/"
-        className={cn("flex flex-1 items-center justify-center rounded-xl px-6 py-3", "font-syne text-base font-medium text-[#0b1e0f]", "transition-colors active:scale-[0.98]")}
-        style={{ backgroundColor: "#7dc98a" }}
+    <p className="font-syne text-xs leading-relaxed text-text-secondary">
+      VerifySkn flags visual and barcode anomalies — we don&apos;t replace brand verification. If you have serious concerns, contact the brand directly or check community reports.
+    </p>
+  );
+}
+
+function ActionButtons({ verdict, brand, productName }: { verdict: ScanVerdict; brand?: string; productName?: string }) {
+  return (
+    <div className="flex flex-col gap-3 pt-2">
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Link
+          href="/"
+          className={cn("flex flex-1 items-center justify-center rounded-xl px-6 py-3", "font-syne text-base font-medium text-[#0b1e0f]", "transition-colors active:scale-[0.98]")}
+          style={{ backgroundColor: "#7dc98a" }}
+        >
+          Scan Another Product
+        </Link>
+        <ReportButton
+          label="Report This Product"
+          className={cn("flex flex-1 items-center justify-center rounded-xl border px-6 py-3", "font-syne text-base font-medium text-lime", "transition-colors active:scale-[0.98]")}
+          style={{ borderColor: "rgba(125,201,138,0.35)", background: "transparent", cursor: "pointer" }}
+        />
+      </div>
+      <a
+        href={buyAuthenticUrl(brand, productName)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn("flex items-center justify-center rounded-xl border px-6 py-3", "font-syne text-sm font-medium text-text-primary", "transition-colors hover:bg-background active:scale-[0.98]")}
+        style={{ borderColor: "rgba(26,60,46,0.2)", background: "rgba(26,60,46,0.04)" }}
       >
-        Scan Another Product
-      </Link>
-      <ReportButton
-        label="Report This Product"
-        className={cn("flex flex-1 items-center justify-center rounded-xl border px-6 py-3", "font-syne text-base font-medium text-lime", "transition-colors active:scale-[0.98]")}
-        style={{ borderColor: "rgba(125,201,138,0.35)", background: "transparent", cursor: "pointer" }}
-      />
+        {buyAuthenticLabel(verdict)}
+        <svg className="ml-1.5" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+          <path d="M2.5 9.5l7-7M9.5 2.5H4M9.5 2.5v5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </a>
     </div>
   );
 }
@@ -390,7 +413,8 @@ function ImageResultContent() {
           />
         )}
 
-        <ActionButtons />
+        <DisclosureText />
+        <ActionButtons verdict={data.result} />
       </div>
     </main>
   );

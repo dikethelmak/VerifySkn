@@ -2,23 +2,21 @@
 
 import { motion } from "framer-motion";
 import type { ScanVerdict } from "@/lib/database.types";
+import { verdictLabel, confidenceTier } from "@/lib/verdictUtils";
 
 // ── Config per verdict ───────────────────────────────────────
 
 const VERDICT_CONFIG = {
   authentic: {
     bg: "#2D7A4F",
-    label: "Authentic",
     Icon: CheckCircleIcon,
   },
   unverified: {
     bg: "#E07B2A",
-    label: "Unverified",
     Icon: QuestionCircleIcon,
   },
   suspicious: {
     bg: "#C0392B",
-    label: "Suspicious",
     Icon: ExclamationIcon,
   },
 } as const;
@@ -33,7 +31,7 @@ interface ResultHeroProps {
 }
 
 export function ResultHero({ verdict, confidence, summary }: ResultHeroProps) {
-  const { bg, label, Icon } = VERDICT_CONFIG[verdict];
+  const { bg, Icon } = VERDICT_CONFIG[verdict];
 
   return (
     <section
@@ -55,9 +53,9 @@ export function ResultHero({ verdict, confidence, summary }: ResultHeroProps) {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.18, duration: 0.35, ease: "easeOut" }}
-        className="font-fraunces text-4xl sm:text-5xl font-semibold leading-none"
+        className="font-fraunces text-4xl sm:text-5xl font-semibold leading-none text-center"
       >
-        {label}
+        {verdictLabel(verdict)}
       </motion.h1>
 
       {/* Confidence — Space Mono */}
@@ -65,9 +63,9 @@ export function ResultHero({ verdict, confidence, summary }: ResultHeroProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.82 }}
         transition={{ delay: 0.34, duration: 0.35 }}
-        className="mt-3 font-mono text-base tracking-wide"
+        className="mt-3 font-mono text-sm tracking-wide"
       >
-        {confidence}% match confidence
+        {confidence}% · {confidenceTier(confidence)}
       </motion.p>
 
       {/* Optional summary — Rethink Sans 400 16px, white 85% */}

@@ -7,7 +7,9 @@ import {
   getProductByBarcode,
   getCombinedResultBySession,
   logScan,
+  getCommunityScansForBarcode,
 } from "@/lib/supabase";
+import { verdictLabel, buyAuthenticUrl, buyAuthenticLabel } from "@/lib/verdictUtils";
 import type { Product, ScanVerdict } from "@/lib/database.types";
 import {
   lookupExternalProduct,
@@ -85,10 +87,11 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
   const barcode = decodeURIComponent(params.barcode);
   const sessionId = searchParams.sessionId;
 
-  // Parallel fetch — product lookup + optional combined result
-  const [product, combinedResult] = await Promise.all([
+  // Parallel fetch — product lookup + optional combined result + community stats
+  const [product, combinedResult, communityScans] = await Promise.all([
     getProductByBarcode(barcode),
     sessionId ? getCombinedResultBySession(sessionId) : Promise.resolve(null),
+    getCommunityScansForBarcode(barcode),
   ]);
 
   // If not in our verified DB, try external sources (OBF → Barcode Lookup → UPCitemdb)
@@ -145,6 +148,14 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
         {/* Advisory */}
         {showAdvisory && <AdvisoryBlock verdict={verdict as "unverified" | "suspicious"} />}
 
+        {/* What we checked */}
+        <WhatWeChecked
+          product={product}
+          externalProduct={externalProduct}
+          combinedResult={combinedResult}
+          communityScans={communityScans}
+        />
+
         {/* Inline image upload for unverified — hidden once combined result is present */}
         {!combinedResult && verdict === "unverified" && (
           <InlineImageAnalysis barcode={barcode} sessionId={sessionId} />
@@ -163,8 +174,17 @@ export default async function ResultPage({ params, searchParams }: PageProps) {
           />
         </Suspense>
 
+        {/* Honest disclosure */}
+        <p className="font-syne text-xs leading-relaxed text-text-secondary">
+          VerifySkn flags visual and barcode anomalies — we don&apos;t replace brand verification. If you have serious concerns, contact the brand directly or check community reports.
+        </p>
+
         {/* Action buttons */}
-        <ActionButtons />
+        <ActionButtons
+          verdict={verdict}
+          brand={product?.brand ?? externalProduct?.brand}
+          productName={product?.name ?? externalProduct?.name}
+        />
       </div>
     </main>
   );
@@ -381,31 +401,113 @@ function PhotoUpsellBlock() {
   );
 }
 
+// ── What we checked ───────────────────────────────────────────
+
+function WhatWeChecked({
+  product,
+  externalProduct,
+  combinedResult,
+  communityScans,
+}: {
+  product: Product | null;
+  externalProduct: ExternalProduct | null;
+  combinedResult: { final_result: string } | null;
+  communityScans: { totalScans: number; flaggedScans: number };
+}) {
+  const dbSource = product
+    ? "Found in VerifySkn verified registry"
+    : externalProduct
+    ? `Found in ${externalSourceLabel(externalProduct.source)} database`
+    : "Not found in any barcode database";
+
+  const aiStatus = combinedResult
+    ? "Packaging image analysed by AI"
+    : "No image analysis — scan packaging for full check";
+
+  let communityLabel: string;
+  const { totalScans, flaggedScans } = communityScans;
+  if (totalScans === 0) {
+    communityLabel = "First scan of this product — no community data yet";
+  } else if (flaggedScans > 0) {
+    communityLabel = `${flaggedScans} of ${totalScans} scanner${totalScans > 1 ? "s" : ""} flagged this product`;
+  } else {
+    communityLabel = `Community verified — ${totalScans} scan${totalScans > 1 ? "s" : ""}, no issues flagged`;
+  }
+
+  const signals = [
+    { icon: "🔍", text: dbSource },
+    { icon: "🤖", text: aiStatus },
+    { icon: "👥", text: communityLabel },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+      <p className="mb-3 font-syne text-xs font-semibold uppercase tracking-widest text-text-secondary">
+        What we checked
+      </p>
+      <ul className="flex flex-col gap-2.5">
+        {signals.map(({ icon, text }, i) => (
+          <li key={i} className="flex items-start gap-3">
+            <span className="text-base leading-none mt-0.5">{icon}</span>
+            <span className="font-syne text-sm text-text-primary leading-snug">{text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 // ── Action buttons ────────────────────────────────────────────
 
-function ActionButtons() {
+function ActionButtons({
+  verdict,
+  brand,
+  productName,
+}: {
+  verdict: ScanVerdict;
+  brand?: string;
+  productName?: string;
+}) {
   return (
-    <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-      <Link
-        href="/"
+    <div className="flex flex-col gap-3 pt-2">
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Link
+          href="/"
+          className={cn(
+            "flex flex-1 items-center justify-center rounded-xl px-6 py-3",
+            "font-syne text-base font-medium text-[#0b1e0f]",
+            "transition-colors active:scale-[0.98]"
+          )}
+          style={{ backgroundColor: "#7dc98a" }}
+        >
+          Scan Another Product
+        </Link>
+        <ReportButton
+          label="Report This Product"
+          className={cn(
+            "flex flex-1 items-center justify-center rounded-xl border px-6 py-3",
+            "font-syne text-base font-medium text-lime",
+            "transition-colors active:scale-[0.98]"
+          )}
+          style={{ borderColor: "rgba(125,201,138,0.35)", background: "transparent", cursor: "pointer" }}
+        />
+      </div>
+      <a
+        href={buyAuthenticUrl(brand, productName)}
+        target="_blank"
+        rel="noopener noreferrer"
         className={cn(
-          "flex flex-1 items-center justify-center rounded-xl px-6 py-3",
-          "font-syne text-base font-medium text-[#0b1e0f]",
-          "transition-colors active:scale-[0.98]"
+          "flex items-center justify-center rounded-xl border px-6 py-3",
+          "font-syne text-sm font-medium text-text-primary",
+          "transition-colors hover:bg-background active:scale-[0.98]"
         )}
-        style={{ backgroundColor: "#7dc98a" }}
+        style={{ borderColor: "rgba(26,60,46,0.2)", background: "rgba(26,60,46,0.04)" }}
       >
-        Scan Another Product
-      </Link>
-      <ReportButton
-        label="Report This Product"
-        className={cn(
-          "flex flex-1 items-center justify-center rounded-xl border px-6 py-3",
-          "font-syne text-base font-medium text-lime",
-          "transition-colors active:scale-[0.98]"
-        )}
-        style={{ borderColor: "rgba(125,201,138,0.35)", background: "transparent", cursor: "pointer" }}
-      />
+        {buyAuthenticLabel(verdict)}
+        <svg className="ml-1.5" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+          <path d="M2.5 9.5l7-7M9.5 2.5H4M9.5 2.5v5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </a>
     </div>
   );
 }

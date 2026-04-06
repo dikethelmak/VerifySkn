@@ -285,6 +285,31 @@ export async function getCombinedResultBySession(
   return data as unknown as CombinedResult;
 }
 
+// ── Community scan stats ─────────────────────────────────────
+
+/**
+ * Returns total scan count and flagged-suspicious count for a barcode.
+ * Used to show community confidence on result pages.
+ */
+export async function getCommunityScansForBarcode(
+  barcode: string
+): Promise<{ totalScans: number; flaggedScans: number }> {
+  try {
+    const supabase = createSupabaseServerClient();
+    const { data } = await supabase
+      .from("scan_logs")
+      .select("result")
+      .eq("barcode_scanned", barcode);
+    const rows = data ?? [];
+    return {
+      totalScans:   rows.length,
+      flaggedScans: rows.filter((r) => r.result === "suspicious").length,
+    };
+  } catch {
+    return { totalScans: 0, flaggedScans: 0 };
+  }
+}
+
 // ── Reporting helpers ────────────────────────────────────────
 
 /**

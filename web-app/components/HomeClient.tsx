@@ -11,6 +11,7 @@ import {
   type ImageAnalysisSession,
 } from "@/lib/imageSession";
 import { mapFlagLabel } from "@/lib/flagLabels";
+import { verdictLabel, confidenceTier } from "@/lib/verdictUtils";
 
 type Tab   = "serial" | "deep";
 type Phase = "idle" | "scanning" | "loading" | "result" | "not-found";
@@ -1057,13 +1058,13 @@ export function HomeClient() {
 
               {/* Verdict + confidence */}
               <h2
-                className="mb-1.5 font-semibold capitalize"
+                className="mb-1.5 font-semibold"
                 style={{ fontSize: "clamp(22px,2.5vw,32px)", color: VERDICT_COLORS[deepResult.result] ?? C.lime, letterSpacing: "-0.025em" }}
               >
-                {deepResult.result}
+                {verdictLabel(deepResult.result)}
               </h2>
               <p className="mb-5 text-xs" style={{ color: C.w25, fontFamily: MONO }}>
-                {deepResult.confidence}% confidence
+                {deepResult.confidence}% · {confidenceTier(deepResult.confidence)}
               </p>
 
               {/* Summary */}
