@@ -10,6 +10,7 @@ import {
   IMAGE_SESSION_KEY,
   type ImageAnalysisSession,
 } from "@/lib/imageSession";
+import { mapFlagLabel } from "@/lib/flagLabels";
 
 type Tab   = "serial" | "deep";
 type Phase = "idle" | "scanning" | "loading" | "result" | "not-found";
@@ -148,6 +149,15 @@ const VERDICT_COLORS: Record<string, string> = {
   unverified: "rgba(255,193,7,0.85)",
   suspicious: "rgba(255,90,80,0.9)",
 };
+
+// Detect "no packaging found" state: all checks uncertain/na + very low confidence
+function isNoPackagingResult(r: DeepResult): boolean {
+  const allNonPass = DEEP_CHECKS.every(({ key }) => {
+    const badge = normalizeCheck(r[key] as string);
+    return badge === "uncertain" || badge === "na";
+  });
+  return allNonPass && r.confidence <= 10;
+}
 
 // ── Report Modal ──────────────────────────────────────────────
 
@@ -431,7 +441,7 @@ async function downloadDeepReport(r: DeepResult) {
       <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;color:rgba(255,255,255,0.25);margin-bottom:12px;text-transform:uppercase;font-family:'DM Mono','Space Mono',monospace">Issues Detected</div>
       ${r.flags.map(f => `
         <div style="display:flex;gap:8px;font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:7px;align-items:flex-start;font-family:inherit;line-height:1.5">
-          <span style="color:rgba(255,90,80,0.9);flex-shrink:0;margin-top:1px">›</span><span>${f}</span>
+          <span style="color:rgba(255,90,80,0.9);flex-shrink:0;margin-top:1px">›</span><span>${mapFlagLabel(f)}</span>
         </div>`).join("")}
     </div>` : "";
 
@@ -637,7 +647,7 @@ export function HomeClient() {
           </h1>
 
           <p className="mb-6 text-sm leading-relaxed" style={{ color: C.w40, maxWidth: "360px" }}>
-            Every genuine VerifySkn product carries a unique code on the base of its packaging. Enter it below or scan to verify.
+            Scan any skincare product to instantly check if it&apos;s genuine.
           </p>
 
           {/* ── Tabs ── */}
@@ -990,7 +1000,49 @@ export function HomeClient() {
           )}
 
           {/* ── Deep tab — result ── */}
-          {tab === "deep" && deepResult && (
+          {tab === "deep" && deepResult && isNoPackagingResult(deepResult) && (
+            <div className="flex flex-col gap-5 py-4">
+              <div
+                className="flex h-14 w-14 items-center justify-center rounded-full"
+                style={{ background: "rgba(255,193,7,0.08)", border: "0.5px solid rgba(255,193,7,0.2)" }}
+              >
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,193,7,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="mb-1.5 font-semibold" style={{ fontSize: "clamp(16px,2vw,22px)", letterSpacing: "-0.02em" }}>
+                  No packaging detected
+                </h3>
+                <p className="text-sm leading-relaxed" style={{ color: C.w40, maxWidth: "320px" }}>
+                  The image doesn&apos;t show product packaging clearly. For accurate results:
+                </p>
+              </div>
+              <ul className="flex flex-col gap-2">
+                {[
+                  "Photo the front or back label directly",
+                  "Ensure good lighting — no glare or shadows",
+                  "Move close enough to fill the frame with the packaging",
+                  "Avoid photographing a shelf or multiple products",
+                ].map((tip, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm" style={{ color: C.w60 }}>
+                    <span style={{ color: C.lime, flexShrink: 0 }}>›</span>
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => { setDeepResult(null); setDeepPhase("idle"); }}
+                className="self-start rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                style={{ background: C.lime, color: C.forestDeep, border: "none", cursor: "pointer", fontFamily: UI }}
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {tab === "deep" && deepResult && !isNoPackagingResult(deepResult) && (
             <>
               {/* Header row */}
               <div className="mb-2.5 flex items-center gap-2">
@@ -1060,7 +1112,7 @@ export function HomeClient() {
                     {deepResult.flags.map((flag, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs" style={{ color: C.w60 }}>
                         <span style={{ color: C.red, flexShrink: 0 }}>›</span>
-                        {flag}
+                        {mapFlagLabel(flag)}
                       </li>
                     ))}
                   </ul>
@@ -1079,7 +1131,7 @@ export function HomeClient() {
                 <button
                   onClick={() => {
                     const issues: ReportIssue[] = deepResult.result === "suspicious" ? ["counterfeit"] : deepResult.result === "unverified" ? ["wrong_info"] : [];
-                    const flags = deepResult.flags.length > 0 ? `Flags:\n${deepResult.flags.map(f => `• ${f}`).join("\n")}` : "";
+                    const flags = deepResult.flags.length > 0 ? `Flags:\n${deepResult.flags.map(f => `• ${mapFlagLabel(f)}`).join("\n")}` : "";
                     const desc = [deepResult.summary, flags].filter(Boolean).join("\n\n");
                     setReportPrefill({ issues, desc, images: deepImage ? [deepImage] : [] });
                     setShowReport(true);

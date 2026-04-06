@@ -6,6 +6,7 @@ import { TriangleAlert } from "lucide-react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { AnalysisLoader } from "@/components/AnalysisLoader";
 import type { ScanVerdict } from "@/lib/database.types";
+import { mapFlagLabel } from "@/lib/flagLabels";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -138,7 +139,7 @@ function InlineResultDisplay({ result }: { result: InlineResult }) {
                   className="mt-0.5 shrink-0"
                   style={{ color: "#C0392B" }}
                 />
-                <span className="font-syne text-sm text-text-primary">{flag}</span>
+                <span className="font-syne text-sm text-text-primary">{mapFlagLabel(flag)}</span>
               </li>
             ))}
           </ul>

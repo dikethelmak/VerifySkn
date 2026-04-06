@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { ScanVerdict } from "@/lib/database.types";
 import { IMAGE_SESSION_KEY, type ImageAnalysisSession } from "@/lib/imageSession";
+import { mapFlagLabel } from "@/lib/flagLabels";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -91,7 +92,7 @@ function FlagsSection({ flags }: { flags: string[] }) {
         {flags.map((flag, i) => (
           <li key={i} className="flex items-start gap-2">
             <TriangleAlert size={14} strokeWidth={2} className="mt-0.5 shrink-0" style={{ color: "#C0392B" }} />
-            <span className="font-syne text-sm font-normal text-text-primary">{flag}</span>
+            <span className="font-syne text-sm font-normal text-text-primary">{mapFlagLabel(flag)}</span>
           </li>
         ))}
       </ul>
@@ -147,6 +148,63 @@ function CombinedSection({ barcodeConfidence, imageConfidence, finalResult, fina
         Based on barcode verification and packaging analysis
       </p>
     </div>
+  );
+}
+
+function isNoPackagingResult(d: ImageResult): boolean {
+  const keys: (keyof Pick<ImageResult, "font_quality"|"logo_accuracy"|"print_quality"|"label_alignment"|"spelling_check"|"hologram_check">)[] = [
+    "font_quality","logo_accuracy","print_quality","label_alignment","spelling_check","hologram_check",
+  ];
+  const allNonPass = keys.every((k) => {
+    const badge = normalizeCheck(d[k]);
+    return badge === "uncertain" || badge === "na";
+  });
+  return allNonPass && d.confidence <= 10;
+}
+
+function NoPackagingPrompt() {
+  return (
+    <main className="min-h-screen bg-background">
+      <div className="mx-auto max-w-lg px-4 sm:px-6 md:px-8 py-16 flex flex-col gap-6">
+        <div
+          className="flex h-16 w-16 items-center justify-center rounded-full"
+          style={{ backgroundColor: "rgba(224,123,42,0.1)", border: "1px solid rgba(224,123,42,0.2)" }}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(224,123,42,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+        <div>
+          <h1 className="font-fraunces text-2xl font-semibold text-text-primary mb-2">
+            No packaging detected
+          </h1>
+          <p className="font-syne text-sm text-text-secondary leading-relaxed">
+            The image doesn&apos;t show product packaging clearly. For accurate results:
+          </p>
+        </div>
+        <ul className="flex flex-col gap-2.5">
+          {[
+            "Photo the front or back label directly",
+            "Ensure good lighting — no glare or shadows",
+            "Move close enough to fill the frame with the packaging",
+            "Avoid photographing a shelf or multiple products",
+          ].map((tip, i) => (
+            <li key={i} className="flex items-start gap-2 font-syne text-sm text-text-primary">
+              <span className="text-success mt-0.5 flex-shrink-0">›</span>
+              {tip}
+            </li>
+          ))}
+        </ul>
+        <Link
+          href="/"
+          className="self-start rounded-xl px-6 py-3 font-syne text-sm font-semibold text-[#0b1e0f] transition-opacity hover:opacity-90"
+          style={{ backgroundColor: "#7dc98a" }}
+        >
+          Try again
+        </Link>
+      </div>
+    </main>
   );
 }
 
@@ -290,6 +348,8 @@ function ImageResultContent() {
   }, [sessionId, router]);
 
   if (!ready || !data) return <LoadingSpinner />;
+
+  if (isNoPackagingResult(data)) return <NoPackagingPrompt />;
 
   const hasCombined =
     data.barcodeConfidence !== undefined &&
