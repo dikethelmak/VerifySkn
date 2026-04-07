@@ -1069,7 +1069,7 @@ export function HomeClient() {
 
               {/* Summary */}
               {deepResult.summary && (
-                <p className="mb-6 text-sm leading-relaxed" style={{ color: C.w40, maxWidth: "340px" }}>
+                <p className="mb-6 text-sm leading-relaxed" style={{ color: C.w60 }}>
                   {deepResult.summary}
                 </p>
               )}
@@ -1141,6 +1141,13 @@ export function HomeClient() {
                   style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}`, color: C.red, cursor: "pointer", fontFamily: UI }}
                 >
                   Report product
+                </button>
+                <button
+                  onClick={() => { setDeepResult(null); setDeepPhase("idle"); setDeepImage(null); }}
+                  className="text-sm transition-opacity hover:opacity-70"
+                  style={{ background: "none", border: "none", cursor: "pointer", color: C.w25, fontFamily: UI }}
+                >
+                  Clear result
                 </button>
               </div>
             </>
