@@ -491,9 +491,10 @@ async function downloadDeepReport(r: DeepResult) {
 // ── HomeClient ────────────────────────────────────────────────
 
 export function HomeClient() {
-  const [tab,    setTab]    = useState<Tab>("serial");
-  const [serial, setSerial] = useState("");
-  const [phase,  setPhase]  = useState<Phase>("idle");
+  const [tab,        setTab]        = useState<Tab>("serial");
+  const [serial,     setSerial]     = useState("");
+  const [phase,      setPhase]      = useState<Phase>("idle");
+  const [showSerial, setShowSerial] = useState(false);
   const [result, setResult] = useState<ProductData | null>(null);
   const [showReport,    setShowReport]    = useState(false);
   const [reportPrefill, setReportPrefill] = useState<{ issues: ReportIssue[]; desc: string; images: ReportImage[] }>({ issues: [], desc: "", images: [] });
@@ -678,48 +679,15 @@ export function HomeClient() {
           {tab === "serial" && (
             phase !== "scanning" ? (
               <form onSubmit={handleSubmit} className="flex flex-col">
+                {/* ── Barcode scan area (primary) ── */}
                 <label className="mb-3 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
-                  Enter unique serial number
-                </label>
-                <input
-                  value={serial}
-                  onChange={(e) => setSerial(fmt(e.target.value))}
-                  placeholder="SKN-000-000"
-                  maxLength={13}
-                  autoComplete="off"
-                  spellCheck={false}
-                  disabled={phase === "loading"}
-                  className="serial-input mb-2.5 w-full rounded-lg px-4 py-3 text-xl font-medium outline-none transition-all"
-                  style={{
-                    background:    C.w04,
-                    border:        `0.5px solid ${C.w15}`,
-                    color:         C.w60,
-                    fontFamily:    MONO,
-                    letterSpacing: "0.06em",
-                    caretColor:    C.lime,
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = C.limeBorder;
-                    e.currentTarget.style.background  = "rgba(125,201,138,0.04)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = C.w15;
-                    e.currentTarget.style.background  = C.w04;
-                  }}
-                />
-                <p className="mb-8 text-xs" style={{ color: "rgba(255,255,255,0.2)", fontFamily: MONO }}>
-                  Find this on the base of your product packaging
-                </p>
-
-                {/* ── Barcode scan area ── */}
-                <label className="mb-3 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
-                  Or scan barcode
+                  Scan barcode
                 </label>
                 <button
                   type="button"
                   onClick={() => setPhase("scanning")}
-                  className="mb-8 flex w-full items-center gap-5 rounded-xl px-5 py-4 transition-all hover:brightness-110"
-                  style={{ background: C.w04, border: `0.5px solid ${C.w08}`, cursor: "pointer" }}
+                  className="mb-6 flex w-full flex-col items-center justify-center gap-4 rounded-xl px-5 py-10 transition-all hover:brightness-110"
+                  style={{ background: C.w04, border: `0.5px solid ${C.limeBorder}`, cursor: "pointer" }}
                 >
                   <div style={{ position: "relative", height: "40px", width: "68px", flexShrink: 0, overflow: "hidden" }}>
                     {([
@@ -736,28 +704,73 @@ export function HomeClient() {
                       ))}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-1 text-left">
+                  <div className="flex flex-col items-center gap-1">
                     <span className="text-sm font-medium" style={{ color: C.w60, fontFamily: UI }}>Scan barcode</span>
                     <span className="text-xs" style={{ color: C.w25, fontFamily: MONO }}>Tap to activate camera</span>
                   </div>
                 </button>
 
+                {/* ── Serial number toggle link ── */}
                 <button
-                  type="submit"
-                  disabled={!serial.trim() || phase === "loading"}
-                  className="w-full rounded-lg py-3.5 text-sm font-semibold transition-opacity hover:opacity-90"
-                  style={{
-                    background: C.lime,
-                    color:      C.forestDeep,
-                    border:     "none",
-                    cursor:     (!serial.trim() || phase === "loading") ? "default" : "pointer",
-                    opacity:    (!serial.trim() || phase === "loading") ? 0.45 : 1,
-                    fontFamily: UI,
-                    letterSpacing: "-0.01em",
-                  }}
+                  type="button"
+                  onClick={() => setShowSerial((v) => !v)}
+                  className="mb-4 text-xs underline-offset-2 hover:opacity-80 transition-opacity"
+                  style={{ background: "none", border: "none", cursor: "pointer", color: C.w40, fontFamily: MONO, textDecoration: "underline", textAlign: "center" }}
                 >
-                  {phase === "loading" ? "Verifying…" : "Verify product"}
+                  {showSerial ? "Hide serial number" : "Or enter serial number manually"}
                 </button>
+
+                {/* ── Serial number input (hidden by default) ── */}
+                {showSerial && (
+                  <>
+                    <input
+                      value={serial}
+                      onChange={(e) => setSerial(fmt(e.target.value))}
+                      placeholder="SKN-000-000"
+                      maxLength={13}
+                      autoComplete="off"
+                      spellCheck={false}
+                      disabled={phase === "loading"}
+                      className="serial-input mb-2.5 w-full rounded-lg px-4 py-3 text-xl font-medium outline-none transition-all"
+                      style={{
+                        background:    C.w04,
+                        border:        `0.5px solid ${C.w15}`,
+                        color:         C.w60,
+                        fontFamily:    MONO,
+                        letterSpacing: "0.06em",
+                        caretColor:    C.lime,
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = C.limeBorder;
+                        e.currentTarget.style.background  = "rgba(125,201,138,0.04)";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = C.w15;
+                        e.currentTarget.style.background  = C.w04;
+                      }}
+                    />
+                    <p className="mb-8 text-xs" style={{ color: "rgba(255,255,255,0.2)", fontFamily: MONO }}>
+                      Find this on the base of your product packaging
+                    </p>
+
+                    <button
+                      type="submit"
+                      disabled={!serial.trim() || phase === "loading"}
+                      className="w-full rounded-lg py-3.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                      style={{
+                        background: C.lime,
+                        color:      C.forestDeep,
+                        border:     "none",
+                        cursor:     (!serial.trim() || phase === "loading") ? "default" : "pointer",
+                        opacity:    (!serial.trim() || phase === "loading") ? 0.45 : 1,
+                        fontFamily: UI,
+                        letterSpacing: "-0.01em",
+                      }}
+                    >
+                      {phase === "loading" ? "Verifying…" : "Verify product"}
+                    </button>
+                  </>
+                )}
               </form>
             ) : (
               /* ── Inline camera scanner ── */
