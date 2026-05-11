@@ -46,7 +46,7 @@ export default function AboutPage() {
           About
         </p>
         <h1 className="font-syne text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-text-primary">
-          Protecting Skin,<br />One Scan at a Time
+          Protecting Skin,<br />One Check at a Time
         </h1>
         <p className="font-syne text-base leading-relaxed text-text-secondary">
           VerifySkn is a free tool that helps you verify skincare authenticity
@@ -66,13 +66,13 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Step
               number="01"
-              title="Scan the Barcode"
-              description="Point your camera at the EAN-13 or UPC barcode on the packaging, or type it in manually."
+              title="Upload or Scan"
+              description="Upload a photo of the product packaging for deep AI analysis, or scan the barcode for a quick lookup."
             />
             <Step
               number="02"
               title="AI Verification"
-              description="We check the barcode against our verified product database and apply AI trained on packaging authenticity signals."
+              description="Our AI inspects packaging details — fonts, labels, print quality, holograms — and cross-checks against our verified product database."
             />
             <Step
               number="03"
@@ -98,7 +98,7 @@ export default function AboutPage() {
           >
             <p className="font-syne text-sm leading-relaxed text-text-primary">
               Always buy from authorised retailers and brand-owned stores. When
-              in doubt, scan before you apply.
+              in doubt, verify before you apply.
             </p>
           </div>
         </div>
