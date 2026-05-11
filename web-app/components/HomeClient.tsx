@@ -491,7 +491,7 @@ async function downloadDeepReport(r: DeepResult) {
 // ── HomeClient ────────────────────────────────────────────────
 
 export function HomeClient() {
-  const [tab,        setTab]        = useState<Tab>("serial");
+  const [tab,        setTab]        = useState<Tab>("deep");
   const [serial,     setSerial]     = useState("");
   const [phase,      setPhase]      = useState<Phase>("idle");
   const [showSerial, setShowSerial] = useState(false);
@@ -649,14 +649,14 @@ export function HomeClient() {
           </h1>
 
           <p className="mb-6 text-sm leading-relaxed" style={{ color: C.w40, maxWidth: "360px" }}>
-            Scan any skincare product to instantly check if it&apos;s genuine.
+            Upload or scan any skincare product to instantly check if it&apos;s genuine.
           </p>
 
           {/* ── Tabs ── */}
           <div className="mb-7 flex flex-wrap gap-2">
             {([
-              { id: "serial" as Tab, label: "Serial code" },
               { id: "deep"   as Tab, label: "Deep analysis" },
+              { id: "serial" as Tab, label: "Serial code" },
             ]).map(({ id, label }) => (
               <button
                 key={id}
