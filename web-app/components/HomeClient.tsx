@@ -116,6 +116,8 @@ interface DeepResult {
   spelling_check:  string;
   hologram_check:  string;
   sessionId:       string;
+  finalResult?:     string;
+  finalConfidence?: number;
 }
 
 // ── Deep analysis check helpers ───────────────────────────────
@@ -505,6 +507,11 @@ export function HomeClient() {
   const [deepResult, setDeepResult] = useState<DeepResult | null>(null);
   const [deepImage,  setDeepImage]  = useState<ReportImage | null>(null);
 
+  // Serial tab image analysis state
+  const [serialImgPhase,  setSerialImgPhase]  = useState<"idle" | "analyzing" | "result" | "error">("idle");
+  const [serialImgResult, setSerialImgResult] = useState<DeepResult | null>(null);
+  const [serialImgError,  setSerialImgError]  = useState<string | null>(null);
+
   // ── Lookup ──────────────────────────────────────────────────
   const lookup = useCallback(async (code: string) => {
     setPhase("loading");
@@ -538,6 +545,9 @@ export function HomeClient() {
     setDeepError(null);
     setDeepResult(null);
     setDeepImage(null);
+    setSerialImgPhase("idle");
+    setSerialImgResult(null);
+    setSerialImgError(null);
   };
 
   // ── Deep analysis ───────────────────────────────────────────
@@ -599,11 +609,43 @@ export function HomeClient() {
     }
   }, []);
 
+  const handleSerialImageReady = useCallback(async (base64: string, mimeType: string) => {
+    setSerialImgPhase("analyzing");
+    setSerialImgError(null);
+    try {
+      const res = await fetch("/api/analyse-product", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ image: base64, mimeType, barcode: result?.barcode || serial }),
+      });
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+      setSerialImgResult({
+        result:          data.result,
+        confidence:      data.confidence,
+        summary:         data.summary ?? "",
+        flags:           data.flags ?? [],
+        font_quality:    data.packaging_checks?.font_quality    ?? "",
+        logo_accuracy:   data.packaging_checks?.logo_accuracy   ?? "",
+        print_quality:   data.packaging_checks?.print_quality   ?? "",
+        label_alignment: data.packaging_checks?.label_alignment ?? "",
+        spelling_check:  data.packaging_checks?.spelling        ?? "",
+        hologram_check:  data.packaging_checks?.hologram        ?? "",
+        sessionId:       data.sessionId ?? "",
+        finalResult:     data.finalResult,
+        finalConfidence: data.finalConfidence,
+      });
+      setSerialImgPhase("result");
+    } catch {
+      setSerialImgPhase("error");
+      setSerialImgError("Analysis failed — please try again with a clearer photo.");
+    }
+  }, [result, serial]);
+
   // ── Derived ─────────────────────────────────────────────────
   const productName = result?.name || result?.product_name || "Unknown product";
   const brandName   = result?.brand || "Unknown brand";
   const isAuth      = result?.source === "database";
-  const isUnverif   = result?.source === "open_beauty_facts";
 
   return (
     <div
@@ -954,26 +996,134 @@ export function HomeClient() {
                     ))}
                   </div>
 
-                  {/* Unverified warning */}
-                  {isUnverif && (
-                    <div className="mb-5 flex items-start gap-2.5 rounded-lg px-4 py-3"
-                      style={{ background: C.amberBg, border: `0.5px solid ${C.amberBorder}` }}>
-                      <div className="mt-px flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold"
-                        style={{ border: "1px solid rgba(255,193,7,0.4)", color: C.amber, fontFamily: MONO }}>
-                        !
-                      </div>
-                      <p className="text-xs leading-relaxed" style={{ color: C.amber, fontFamily: MONO }}>
-                        Found in a public registry but not verified by VerifySkn. Use the full scan page for complete authentication.
-                      </p>
+                  {/* What we checked */}
+                  <div className="mb-6">
+                    <p className="mb-3 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                      What we checked
+                    </p>
+                    <ul className="flex flex-col gap-2.5">
+                      {[
+                        {
+                          icon: "🔍",
+                          text: isAuth
+                            ? "Found in VerifySkn verified registry"
+                            : "Found in a public barcode database — not independently verified",
+                        },
+                        {
+                          icon: "🤖",
+                          text: serialImgPhase === "result"
+                            ? "Packaging image analysed by AI"
+                            : "No image analysis — upload packaging below for a full check",
+                        },
+                      ].map(({ icon, text }, i) => (
+                        <li key={i} className="flex items-start gap-2.5">
+                          <span className="mt-px flex-shrink-0 text-sm leading-none">{icon}</span>
+                          <span className="text-sm" style={{ color: C.w60 }}>{text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Inline image analysis — shown for non-verified results */}
+                  {!isAuth && (
+                    <div className="mb-6">
+                      {serialImgPhase === "idle" && (
+                        <>
+                          <p className="mb-3 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                            Packaging scan
+                          </p>
+                          <ImageUploader onImageReady={handleSerialImageReady} />
+                        </>
+                      )}
+
+                      {serialImgPhase === "analyzing" && (
+                        <AnalysisLoader onComplete={() => {}} />
+                      )}
+
+                      {serialImgPhase === "error" && (
+                        <div className="rounded-lg p-3" style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}` }}>
+                          <p className="text-xs" style={{ color: C.red }}>{serialImgError}</p>
+                          <button
+                            onClick={() => { setSerialImgPhase("idle"); setSerialImgError(null); }}
+                            className="mt-2 text-xs"
+                            style={{ color: C.w40, background: "none", border: "none", cursor: "pointer" }}
+                          >
+                            Try again
+                          </button>
+                        </div>
+                      )}
+
+                      {serialImgPhase === "result" && serialImgResult && (
+                        <>
+                          <p className="mb-3 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                            Packaging checks
+                          </p>
+                          <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            {DEEP_CHECKS.map(({ key, label }) => {
+                              const badge = normalizeCheck(serialImgResult[key] as string);
+                              const { label: badgeLabel, bg, color } = BADGE_CFG[badge];
+                              return (
+                                <div
+                                  key={key}
+                                  className="flex flex-col gap-2 rounded-lg p-3"
+                                  style={{ background: C.w04, border: `0.5px solid ${C.w08}` }}
+                                >
+                                  <p className="text-xs" style={{ color: C.w40, fontFamily: MONO }}>{label}</p>
+                                  <span
+                                    className="self-start rounded-full px-2.5 py-0.5 text-xs"
+                                    style={{ background: bg, color, fontFamily: MONO }}
+                                  >
+                                    {badgeLabel}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {serialImgResult.flags.length > 0 && (
+                            <div className="mb-5 rounded-lg p-3" style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}` }}>
+                              <p className="mb-2 text-xs uppercase tracking-widest" style={{ color: C.red, fontFamily: MONO }}>
+                                Issues detected
+                              </p>
+                              <ul className="flex flex-col gap-1.5">
+                                {serialImgResult.flags.map((flag, i) => (
+                                  <li key={i} className="flex items-start gap-2 text-xs" style={{ color: C.w60 }}>
+                                    <span style={{ color: C.red, flexShrink: 0 }}>›</span>
+                                    {mapFlagLabel(flag)}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {serialImgResult.finalResult && serialImgResult.finalConfidence !== undefined && (
+                            <div className="mb-5 rounded-lg p-4" style={{ background: C.w04, border: `0.5px solid ${C.w08}` }}>
+                              <p className="mb-1.5 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                                Combined verdict
+                              </p>
+                              <div className="flex items-baseline gap-2">
+                                <span
+                                  className="font-semibold leading-none"
+                                  style={{ fontSize: 32, color: VERDICT_COLORS[serialImgResult.finalResult] ?? C.lime, letterSpacing: "-0.03em" }}
+                                >
+                                  {serialImgResult.finalConfidence}%
+                                </span>
+                                <span className="text-sm" style={{ color: C.w40 }}>
+                                  {verdictLabel(serialImgResult.finalResult)}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-xs" style={{ color: C.w25, fontFamily: MONO }}>
+                                Barcode + packaging image analysis
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   )}
 
+                  {/* Actions */}
                   <div className="flex flex-wrap items-center gap-3">
-                    <Link href={`/result/${encodeURIComponent(result.barcode || serial)}`}
-                      className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
-                      style={{ background: C.lime, color: C.forestDeep, textDecoration: "none" }}>
-                      Full analysis
-                    </Link>
                     <button
                       onClick={() => { setReportPrefill({ issues: [], desc: "", images: [] }); setShowReport(true); }}
                       className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
@@ -981,7 +1131,7 @@ export function HomeClient() {
                     >
                       Report product
                     </button>
-                    <button onClick={reset} className="text-xs transition-colors hover:text-white"
+                    <button onClick={reset} className="text-sm transition-colors hover:text-white"
                       style={{ color: C.w25, background: "none", border: "none", cursor: "pointer" }}>
                       Scan another
                     </button>

@@ -72,7 +72,7 @@ export default function RootLayout({
       lang="en"
       className={`${rethinkSans.variable} ${fraunces.variable} ${spaceMono.variable} ${syne.variable} ${dmMono.variable}`}
     >
-      <body className="min-h-screen bg-background font-syne text-text-primary antialiased">
+      <body className="min-h-screen bg-background font-rethink text-text-primary antialiased">
         <Navbar />
         {/* pt-14 offsets the fixed 56px navbar */}
         <div className="pt-14">
