@@ -1057,6 +1057,54 @@ export function HomeClient() {
                     </div>
                   )}
 
+                  {/* Where to buy */}
+                  {(() => {
+                    const q = encodeURIComponent(`${productName} ${brandName}`);
+                    const NECTAR_BRANDS = ["cosrx","medix","advanced clinicals","cerave","replenix","tiam"];
+                    const isNectar = NECTAR_BRANDS.some((b) => brandName.toLowerCase().includes(b));
+                    const ngStore = isNectar
+                      ? { label: "Nectar Beauty Hub", url: `https://nectarbeautyhub.com/search?q=${q}` }
+                      : { label: "Essentials Hub",    url: `https://essentialshub.com/?s=${q}` };
+                    const globalRetailers = [
+                      { label: "Amazon",        url: `https://www.amazon.com/s?k=${q}` },
+                      { label: "Sephora",       url: `https://www.sephora.com/search?keyword=${q}` },
+                      { label: "Lookfantastic", url: `https://www.lookfantastic.com/search?search=${q}` },
+                    ];
+                    const chipStyle = {
+                      background: C.w04, border: `0.5px solid ${C.w15}`,
+                      color: C.w60, fontFamily: MONO, textDecoration: "none",
+                      borderRadius: "999px", padding: "5px 12px", fontSize: "12px",
+                      display: "inline-block", lineHeight: "1.4",
+                      transition: "opacity 0.15s",
+                    } as const;
+                    return (
+                      <div className="mb-6">
+                        <p className="mb-3 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                          Where to buy
+                        </p>
+                        <div className="mb-4 flex flex-wrap gap-2">
+                          {globalRetailers.map(({ label, url }) => (
+                            <a key={label} href={url} target="_blank" rel="noopener noreferrer" style={chipStyle}>
+                              {label} ↗
+                            </a>
+                          ))}
+                        </div>
+
+                        <p className="mb-2 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
+                          Nigeria
+                        </p>
+                        <div className="mb-2 flex flex-wrap gap-2">
+                          <a href={ngStore.url} target="_blank" rel="noopener noreferrer" style={chipStyle}>
+                            {ngStore.label} ↗
+                          </a>
+                        </div>
+                        <p className="text-xs leading-relaxed" style={{ color: C.w25 }}>
+                          We have no affiliation with {ngStore.label}. Links are provided for convenience only.
+                        </p>
+                      </div>
+                    );
+                  })()}
+
                   {/* What we checked */}
                   <div className="mb-6">
                     <p className="mb-3 text-xs uppercase tracking-widest" style={{ color: C.w25, fontFamily: MONO }}>
