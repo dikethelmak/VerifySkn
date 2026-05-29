@@ -2,6 +2,31 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Behaviour
+
+### 1. Think before coding
+- State assumptions explicitly before starting. If uncertain, ask — don't silently pick an interpretation.
+- If multiple approaches exist, surface the tradeoff and confirm before implementing.
+- If something is unclear, stop and name what's confusing. Never hide confusion.
+
+### 2. Simplicity first
+- Write the minimum code that solves the problem. Nothing speculative.
+- No features, abstractions, or configurability beyond what was asked.
+- No error handling for impossible scenarios.
+- If a solution could be half the size, rewrite it. Ask: "Would a senior engineer say this is overcomplicated?"
+
+### 3. Surgical changes
+- Touch only what the request requires. Do not improve adjacent code, comments, or formatting.
+- Match existing style even if you'd do it differently.
+- If you notice unrelated dead code, mention it — don't delete it.
+- When your changes create orphans (unused imports, variables, functions), remove them. Don't remove pre-existing dead code unless asked.
+- Every changed line must trace directly to the user's request.
+
+### 4. Verify before finishing
+- After any edit, confirm the build passes (`npm run build`) before declaring done.
+- For multi-step tasks, state a brief plan with a verifiable check per step.
+- Clarifying questions come **before** implementation, not after mistakes.
+
 ## Git Rules
 - **Always commit as**: `dikethelma55@gmail.com` / `dikethelmak`
 - **Never add Co-Authored-By trailers** to commit messages
@@ -50,9 +75,9 @@ All pages live under `app/`. Server Components are the default; Client Component
 
 Importing `lib/supabase.ts` in a Client Component will crash the build.
 
-### Barcode lookup waterfall (`app/result/[barcode]/page.tsx`)
+### Barcode lookup waterfall (`app/api/product/[barcode]/route.ts`)
 
-When a barcode is scanned, the result page checks sources in order — stops at first hit:
+When a barcode is entered on the home page, the API checks sources in order — stops at first hit:
 1. **Supabase DB** — our verified products → verdict `authentic`
 2. **UPCitemdb** — free trial, 100 req/day, no key → verdict `unverified`
 3. **Go-UPC** — 150 total calls, capped at 5/day (`GO_UPC_API_KEY`) → verdict `unverified`
@@ -122,12 +147,21 @@ Run migrations in order via Supabase Dashboard → SQL Editor:
 
 ## Design System
 
-Three Google fonts loaded as CSS variables in `app/layout.tsx`:
-- `font-rethink` (`--font-rethink`) — Rethink Sans. Default body font, all UI text.
-- `font-fraunces` (`--font-fraunces`) — Fraunces. Headings, hero labels, large numeric values.
-- `font-mono` (`--font-mono`) — Space Mono. Barcodes, confidence scores, technical values.
+Five Google fonts loaded as CSS variables in `app/layout.tsx`:
+- `font-rethink` (`--font-rethink`) — Rethink Sans. Default body font. **Never set explicitly** — it applies via the `<body>` class. Remove it if you see it on paragraphs.
+- `font-fraunces` (`--font-fraunces`) — Fraunces. **Headings only** (`h1`, `h2`, `h3`). Never apply to body text or paragraphs.
+- `font-mono` (`--font-mono`) — Space Mono. Labels, barcodes, confidence scores, technical values (eyebrow text, `uppercase tracking-widest` patterns).
+- `font-syne` (`--font-syne`) — **Home page dark theme only** (HomeClient and its inline navbar). Do not use on any other page.
+- `font-dm-mono` (`--font-dm-mono`) — Home page dark theme mono (HomeClient). Do not use on any other page.
 
-Tailwind colour tokens (`tailwind.config.ts`): `background` (#F7F5F2), `surface` (#FFF), `primary` (#1A3C2E), `accent` (#C9A84C), `success` (#2D7A4F), `warning` (#E07B2A), `danger` (#C0392B), `text-primary` (#141414), `text-secondary` (#6B6B6B), `border` (#E5E2DD).
+### Typography rules — follow exactly, no exceptions
+- `h1`, `h2`, `h3` → `font-fraunces`
+- Body paragraphs, descriptions, UI text → no font class (defaults to `font-rethink`)
+- Eyebrow labels, scores, barcodes, mono values → `font-mono`
+- HomeClient / dark theme UI → `font-syne` + `font-dm-mono` only
+- **Never use `replace_all` on font class names across a whole file.** Make surgical per-element edits.
+
+Tailwind colour tokens (`tailwind.config.ts`): `background` (#0b1e0f), `surface` (#0f2614), `primary` (#1A3C2E), `accent` (#C9A84C), `lime` / `success` (#7dc98a), `warning` (#E07B2A), `danger` (#C0392B), `text-primary` (#eeecea), `text-secondary` (rgba(238,236,234,0.5)), `border` (rgba(255,255,255,0.09)).
 
 `lib/utils.ts` exports `cn()` (clsx + tailwind-merge) — use for all conditional class strings.
 
@@ -135,13 +169,11 @@ Tailwind colour tokens (`tailwind.config.ts`): `background` (#F7F5F2), `surface`
 
 | Route | Type | Purpose |
 |---|---|---|
-| `/` | Server | Home |
-| `/scan` | Client | Barcode scanner + image upload |
-| `/result/[barcode]` | Server | Barcode verdict, optional `?sessionId=` for combined result |
-| `/result/image` | Client | Image analysis result (reads from sessionStorage) |
+| `/` | Server | Home — barcode lookup + deep image analysis, all results inline |
 | `/history` | Server | Paginated scan history |
 | `/report` | Client | Report counterfeit product |
 | `/about` | Server | About page |
+| `/support` | Server | Support — book consultation + contact |
 | `/api/analyse-product` | Route Handler | Vision analysis (POST) |
 | `/api/report` | Route Handler | Submit report, send email, extract patterns (POST) |
 | `/api/jobs/scrape` | Route Handler | Cron — scrape social platforms via Apify |

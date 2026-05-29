@@ -672,6 +672,13 @@ export function HomeClient() {
           >
             About
           </Link>
+          <Link
+            href="/support"
+            className="text-xs transition-colors hover:text-white"
+            style={{ color: C.w40, textDecoration: "none" }}
+          >
+            Support
+          </Link>
         </div>
       </nav>
 
@@ -1136,6 +1143,18 @@ export function HomeClient() {
                       Scan another
                     </button>
                   </div>
+
+                  {/* Booking nudge */}
+                  <p className="mt-1 text-xs" style={{ color: C.w25 }}>
+                    Not sure about this result?{" "}
+                    <Link
+                      href="/support"
+                      className="transition-colors hover:text-white"
+                      style={{ color: C.lime, textDecoration: "underline", textUnderlineOffset: "3px" }}
+                    >
+                      Book a consultation
+                    </Link>
+                  </p>
                 </>
               )}
             </>

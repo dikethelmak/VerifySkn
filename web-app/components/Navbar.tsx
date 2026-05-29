@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const PUBLIC_NAV: { label: string; href: string }[] = [
-  { label: "About", href: "/about" },
+  { label: "About",   href: "/about"   },
+  { label: "Support", href: "/support" },
 ];
 
 const FOREST = "#0b1e0f";
@@ -16,10 +17,6 @@ export function Navbar() {
 
   // Home page has its own inline nav
   if (pathname === "/") return null;
-
-  const visibleNav = PUBLIC_NAV.filter(
-    ({ href }) => pathname !== href && !pathname.startsWith(href + "/")
-  );
 
   return (
     <header
@@ -36,20 +33,24 @@ export function Navbar() {
       </Link>
 
       {/* ── Links ── */}
-      {visibleNav.length > 0 && (
-        <div className="flex items-center gap-7">
-          {visibleNav.map(({ label, href }) => (
+      <div className="flex items-center gap-7">
+        {PUBLIC_NAV.map(({ label, href }) => {
+          const active = pathname === href || pathname.startsWith(href + "/");
+          return (
             <Link
               key={href}
               href={href}
               className="text-xs transition-colors hover:text-white"
-              style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}
+              style={{
+                color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.4)",
+                textDecoration: "none",
+              }}
             >
               {label}
             </Link>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </header>
   );
 }

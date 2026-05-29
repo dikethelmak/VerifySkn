@@ -23,11 +23,11 @@ function Step({
         <p className="font-mono text-xs tracking-widest text-text-secondary">
           {number}
         </p>
-        <h3 className="mt-1 font-syne text-base font-semibold text-lime">
+        <h3 className="mt-1 font-fraunces text-base font-semibold text-lime">
           {title}
         </h3>
       </div>
-      <p className="font-syne text-sm leading-relaxed text-text-secondary">
+      <p className="text-sm leading-relaxed text-text-secondary">
         {description}
       </p>
     </div>
@@ -45,10 +45,10 @@ export default function AboutPage() {
         <p className="font-mono text-xs uppercase tracking-widest text-text-secondary">
           About
         </p>
-        <h1 className="font-syne text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-text-primary">
+        <h1 className="font-fraunces text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-text-primary">
           Protecting Skin,<br />One Check at a Time
         </h1>
-        <p className="font-syne text-base leading-relaxed text-text-secondary">
+        <p className="text-base leading-relaxed text-text-secondary">
           VerifySkn is a free tool that helps you verify skincare authenticity
           before it reaches your skin.
         </p>
@@ -60,7 +60,7 @@ export default function AboutPage() {
       {/* ── How it works + Why it matters ── */}
       <section className="space-y-10">
         <div className="space-y-6">
-          <h2 className="font-syne text-xl sm:text-2xl font-semibold text-text-primary">
+          <h2 className="font-fraunces text-xl sm:text-2xl font-semibold text-text-primary">
             How It Works
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -83,10 +83,10 @@ export default function AboutPage() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="font-syne text-xl sm:text-2xl font-semibold text-text-primary">
+          <h2 className="font-fraunces text-xl sm:text-2xl font-semibold text-text-primary">
             Why It Matters
           </h2>
-          <p className="font-syne text-sm leading-relaxed text-text-secondary">
+          <p className="text-sm leading-relaxed text-text-secondary">
             Counterfeit skincare is a public health risk. Fakes are produced
             without safety testing, quality controls, or regulatory oversight.
             The WHO estimates 1 in 10 medical products in low- and
@@ -96,7 +96,7 @@ export default function AboutPage() {
             className="rounded-xl border-l-4 px-5 py-4"
             style={{ borderLeftColor: "#7dc98a", backgroundColor: "rgba(125,201,138,0.07)" }}
           >
-            <p className="font-syne text-sm leading-relaxed text-text-primary">
+            <p className="text-sm leading-relaxed text-text-primary">
               Always buy from authorised retailers and brand-owned stores. When
               in doubt, verify before you apply.
             </p>
@@ -112,10 +112,10 @@ export default function AboutPage() {
         <p className="font-mono text-xs uppercase tracking-widest text-text-secondary">
           Founder
         </p>
-        <h2 className="font-syne text-2xl font-semibold text-text-primary">
+        <h2 className="font-fraunces text-2xl font-semibold text-text-primary">
           Thelma Dike, Lagos Nigeria
         </h2>
-        <p className="font-syne text-sm leading-relaxed text-text-secondary">
+        <p className="text-sm leading-relaxed text-text-secondary">
           After moving to a new city, I kept buying the same products that had
           always worked on my skin. A month passed and nothing changed. I
           switched vendors and within a week, the results were back. That was
@@ -131,7 +131,7 @@ export default function AboutPage() {
 
       {/* ── Contact ── */}
       <section>
-        <p className="font-syne text-sm text-text-secondary">
+        <p className="text-sm text-text-secondary">
           Questions, press enquiries, or data removal requests?
         </p>
         <a
