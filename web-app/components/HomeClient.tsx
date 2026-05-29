@@ -88,13 +88,16 @@ function fmt(raw: string): string {
 
 // ── Types ─────────────────────────────────────────────────────
 interface ProductData {
-  name?:         string;
-  product_name?: string;
-  brand?:        string;
-  barcode?:      string;
-  category?:     string;
-  categories?:   string;
-  source:        "database" | "open_beauty_facts" | "not_found";
+  name?:                  string;
+  product_name?:          string;
+  brand?:                 string;
+  barcode?:               string;
+  category?:              string;
+  categories?:            string;
+  source:                 "database" | "open_beauty_facts" | "not_found";
+  how_to_use?:            string | null;
+  skin_type_suitability?: string | null;
+  key_ingredients?:       string[] | null;
 }
 
 interface ReportImage {
@@ -512,6 +515,9 @@ export function HomeClient() {
   const [serialImgResult, setSerialImgResult] = useState<DeepResult | null>(null);
   const [serialImgError,  setSerialImgError]  = useState<string | null>(null);
 
+  // Product details accordion
+  const [showDetails, setShowDetails] = useState(false);
+
   // ── Lookup ──────────────────────────────────────────────────
   const lookup = useCallback(async (code: string) => {
     setPhase("loading");
@@ -548,6 +554,7 @@ export function HomeClient() {
     setSerialImgPhase("idle");
     setSerialImgResult(null);
     setSerialImgError(null);
+    setShowDetails(false);
   };
 
   // ── Deep analysis ───────────────────────────────────────────
@@ -1002,6 +1009,53 @@ export function HomeClient() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Product details accordion */}
+                  {(result.how_to_use || result.skin_type_suitability || (result.key_ingredients && result.key_ingredients.length > 0)) && (
+                    <div className="mb-6">
+                      <button
+                        onClick={() => setShowDetails((v) => !v)}
+                        className="flex w-full items-center justify-between text-xs uppercase tracking-widest"
+                        style={{ color: C.w25, fontFamily: MONO, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                      >
+                        <span>Product details</span>
+                        <span style={{ color: C.w40, fontSize: "16px", lineHeight: 1 }}>{showDetails ? "−" : "+"}</span>
+                      </button>
+
+                      {showDetails && (
+                        <div className="mt-3 flex flex-col gap-4">
+                          {result.skin_type_suitability && (
+                            <div className="rounded-lg p-3" style={{ background: C.w04, border: `0.5px solid ${C.w08}` }}>
+                              <p className="mb-1 text-xs uppercase tracking-wider" style={{ color: C.w25, fontFamily: MONO }}>Skin type</p>
+                              <p className="text-sm" style={{ color: C.w60 }}>{result.skin_type_suitability}</p>
+                            </div>
+                          )}
+                          {result.how_to_use && (
+                            <div className="rounded-lg p-3" style={{ background: C.w04, border: `0.5px solid ${C.w08}` }}>
+                              <p className="mb-1 text-xs uppercase tracking-wider" style={{ color: C.w25, fontFamily: MONO }}>How to use</p>
+                              <p className="text-sm leading-relaxed" style={{ color: C.w60 }}>{result.how_to_use}</p>
+                            </div>
+                          )}
+                          {result.key_ingredients && result.key_ingredients.length > 0 && (
+                            <div className="rounded-lg p-3" style={{ background: C.w04, border: `0.5px solid ${C.w08}` }}>
+                              <p className="mb-2 text-xs uppercase tracking-wider" style={{ color: C.w25, fontFamily: MONO }}>Key ingredients</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {result.key_ingredients.map((ing) => (
+                                  <span
+                                    key={ing}
+                                    className="rounded-full px-2.5 py-0.5 text-xs"
+                                    style={{ background: C.limeDim, color: C.lime, border: `0.5px solid ${C.limeBorder}`, fontFamily: MONO }}
+                                  >
+                                    {ing}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* What we checked */}
                   <div className="mb-6">

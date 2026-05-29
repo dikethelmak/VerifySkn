@@ -9,9 +9,10 @@ export interface OBFProduct {
   image_url: string | null
   categories: string
   quantity: string
+  how_to_use: string | null
 }
 
-const FIELDS = 'code,product_name,brands,ingredients_text,image_front_url,categories,quantity'
+const FIELDS = 'code,product_name,brands,ingredients_text,image_front_url,categories,quantity,how_to_use_en'
 
 function normaliseProduct(p: Record<string, unknown>): OBFProduct {
   return {
@@ -22,6 +23,7 @@ function normaliseProduct(p: Record<string, unknown>): OBFProduct {
     image_url: (p.image_front_url as string) ?? null,
     categories: String(p.categories ?? ''),
     quantity: String(p.quantity ?? ''),
+    how_to_use: (p.how_to_use_en as string) || null,
   }
 }
 

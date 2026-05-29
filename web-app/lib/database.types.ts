@@ -26,6 +26,9 @@ export interface Database {
           country_of_manufacture: string;
           authenticated_retailers: string[];
           packaging_notes: string | null;
+          how_to_use: string | null;
+          skin_type_suitability: string | null;
+          key_ingredients: string[] | null;
           created_at: string;
           updated_at: string;
         };
@@ -39,6 +42,9 @@ export interface Database {
           country_of_manufacture: string;
           authenticated_retailers?: string[];
           packaging_notes?: string | null;
+          how_to_use?: string | null;
+          skin_type_suitability?: string | null;
+          key_ingredients?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -52,6 +58,9 @@ export interface Database {
           country_of_manufacture?: string;
           authenticated_retailers?: string[];
           packaging_notes?: string | null;
+          how_to_use?: string | null;
+          skin_type_suitability?: string | null;
+          key_ingredients?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };

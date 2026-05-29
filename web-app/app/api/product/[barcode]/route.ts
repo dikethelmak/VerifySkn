@@ -46,6 +46,7 @@ export async function GET(
           packaging_notes:         obfProduct.ingredients
             ? `Ingredients: ${obfProduct.ingredients.slice(0, 500)}`
             : null,
+          how_to_use:              obfProduct.how_to_use || null,
         },
         { onConflict: 'barcode' }
       )
