@@ -36,7 +36,7 @@ function SupportCard({
         <p className="font-mono text-xs uppercase tracking-widest text-text-secondary">
           {eyebrow}
         </p>
-        <h2 className="font-fraunces text-xl font-semibold text-text-primary">
+        <h2 className="font-syne text-xl font-semibold text-text-primary">
           {title}
         </h2>
       </div>
@@ -65,7 +65,7 @@ export default function SupportPage() {
         <p className="font-mono text-xs uppercase tracking-widest text-text-secondary">
           Support
         </p>
-        <h1 className="font-fraunces text-2xl font-semibold leading-tight text-text-primary sm:text-3xl md:text-4xl">
+        <h1 className="font-syne text-2xl font-semibold leading-tight text-text-primary sm:text-3xl md:text-4xl">
           How can we help?
         </h1>
         <p className="max-w-xl text-base leading-relaxed text-text-secondary">

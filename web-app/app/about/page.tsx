@@ -23,7 +23,7 @@ function Step({
         <p className="font-mono text-xs tracking-widest text-text-secondary">
           {number}
         </p>
-        <h3 className="mt-1 font-fraunces text-base font-semibold text-lime">
+        <h3 className="mt-1 font-syne text-base font-semibold text-lime">
           {title}
         </h3>
       </div>
@@ -45,7 +45,7 @@ export default function AboutPage() {
         <p className="font-mono text-xs uppercase tracking-widest text-text-secondary">
           About
         </p>
-        <h1 className="font-fraunces text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-text-primary">
+        <h1 className="font-syne text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight text-text-primary">
           Protecting Skin,<br />One Check at a Time
         </h1>
         <p className="text-base leading-relaxed text-text-secondary">
@@ -60,7 +60,7 @@ export default function AboutPage() {
       {/* ── How it works + Why it matters ── */}
       <section className="space-y-10">
         <div className="space-y-6">
-          <h2 className="font-fraunces text-xl sm:text-2xl font-semibold text-text-primary">
+          <h2 className="font-syne text-xl sm:text-2xl font-semibold text-text-primary">
             How It Works
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -83,7 +83,7 @@ export default function AboutPage() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="font-fraunces text-xl sm:text-2xl font-semibold text-text-primary">
+          <h2 className="font-syne text-xl sm:text-2xl font-semibold text-text-primary">
             Why It Matters
           </h2>
           <p className="text-sm leading-relaxed text-text-secondary">
@@ -112,7 +112,7 @@ export default function AboutPage() {
         <p className="font-mono text-xs uppercase tracking-widest text-text-secondary">
           Founder
         </p>
-        <h2 className="font-fraunces text-2xl font-semibold text-text-primary">
+        <h2 className="font-syne text-2xl font-semibold text-text-primary">
           Thelma Dike, Lagos Nigeria
         </h2>
         <p className="text-sm leading-relaxed text-text-secondary">
