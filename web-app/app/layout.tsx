@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Fraunces, Rethink_Sans, Space_Mono, Syne, DM_Mono } from "next/font/google";
-import Script from "next/script";
 import { Navbar } from "@/components/Navbar";
 import { PageTransition } from "@/components/PageTransition";
 import "./globals.css";
@@ -79,10 +78,6 @@ export default function RootLayout({
         <div className="pt-14">
           <PageTransition>{children}</PageTransition>
         </div>
-        <Script
-          src="https://s.skimresources.com/js/303838X1791974.skimlinks.js"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );
