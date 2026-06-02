@@ -57,7 +57,6 @@ GMAIL_USER=
 GMAIL_APP_PASSWORD=
 GO_UPC_API_KEY=
 # Optional — skip if not configured:
-BARCODE_LOOKUP_API_KEY=
 COSMETHICS_API_KEY=
 ```
 
@@ -149,13 +148,13 @@ Run migrations in order via Supabase Dashboard → SQL Editor:
 
 Five Google fonts loaded as CSS variables in `app/layout.tsx`:
 - `font-rethink` (`--font-rethink`) — Rethink Sans. Default body font. **Never set explicitly** — it applies via the `<body>` class. Remove it if you see it on paragraphs.
-- `font-fraunces` (`--font-fraunces`) — Fraunces. **Headings only** (`h1`, `h2`, `h3`). Never apply to body text or paragraphs.
+- `font-fraunces` (`--font-fraunces`) — Fraunces. Not currently used — do not add.
 - `font-mono` (`--font-mono`) — Space Mono. Labels, barcodes, confidence scores, technical values (eyebrow text, `uppercase tracking-widest` patterns).
-- `font-syne` (`--font-syne`) — **Home page dark theme only** (HomeClient and its inline navbar). Do not use on any other page.
+- `font-syne` (`--font-syne`) — **Headings on all pages** (`h1`, `h2`, `h3`) and the home page dark theme UI (HomeClient).
 - `font-dm-mono` (`--font-dm-mono`) — Home page dark theme mono (HomeClient). Do not use on any other page.
 
 ### Typography rules — follow exactly, no exceptions
-- `h1`, `h2`, `h3` → `font-fraunces`
+- `h1`, `h2`, `h3` → `font-syne`
 - Body paragraphs, descriptions, UI text → no font class (defaults to `font-rethink`)
 - Eyebrow labels, scores, barcodes, mono values → `font-mono`
 - HomeClient / dark theme UI → `font-syne` + `font-dm-mono` only
