@@ -6,7 +6,12 @@ export const metadata: Metadata = {
   title: "Report a Product",
 };
 
-export default function ReportPage() {
+interface PageProps {
+  searchParams: { barcode?: string };
+}
+
+export default function ReportPage({ searchParams }: PageProps) {
+  const barcode = searchParams.barcode ?? "";
   return (
     <main className="min-h-screen bg-background px-4 py-12 flex flex-col items-center">
       <div className="w-full max-w-md space-y-6">
@@ -21,7 +26,7 @@ export default function ReportPage() {
             Spotted a counterfeit or incorrect listing? Let us know and we&apos;ll investigate.
           </p>
         </div>
-        <ReportForm barcode="" />
+        <ReportForm barcode={barcode} />
         <p className="text-center text-xs text-text-secondary">
           <Link href="/" className="underline underline-offset-2 hover:text-text-primary transition-colors">
             Back to scanner
