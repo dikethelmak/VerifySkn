@@ -171,13 +171,13 @@ export function NotificationBell() {
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <p className="font-rethink text-sm font-semibold text-text-primary">
+              <p className="text-sm font-semibold text-text-primary">
                 Notifications
               </p>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllRead}
-                  className="font-rethink text-xs text-primary hover:underline"
+                  className="text-xs text-primary hover:underline"
                 >
                   Mark all as read
                 </button>
@@ -187,7 +187,7 @@ export function NotificationBell() {
             {/* List */}
             <div className="max-h-[420px] overflow-y-auto">
               {notifications.length === 0 ? (
-                <p className="px-5 py-12 text-center font-rethink text-sm italic text-text-secondary">
+                <p className="px-5 py-12 text-center text-sm italic text-text-secondary">
                   You&apos;re all caught up
                 </p>
               ) : (
@@ -219,10 +219,10 @@ export function NotificationBell() {
 
                           {/* Text */}
                           <div className="min-w-0 flex-1">
-                            <p className="font-rethink text-[14px] font-semibold leading-snug text-text-primary">
+                            <p className="text-[14px] font-semibold leading-snug text-text-primary">
                               {n.title}
                             </p>
-                            <p className="mt-0.5 font-rethink text-[13px] leading-snug text-text-secondary">
+                            <p className="mt-0.5 text-[13px] leading-snug text-text-secondary">
                               {n.message}
                             </p>
                             <p className="mt-1.5 font-mono text-[11px] text-text-secondary/60">

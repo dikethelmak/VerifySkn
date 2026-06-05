@@ -61,7 +61,7 @@ export default function UsersTab({
         <h1 className="font-fraunces text-2xl font-semibold text-text-primary">
           Users
         </h1>
-        <p className="mt-0.5 font-rethink text-sm text-text-secondary">
+        <p className="mt-0.5 text-sm text-text-secondary">
           {initialUsers.length} registered user{initialUsers.length !== 1 ? "s" : ""}
         </p>
       </div>
@@ -71,7 +71,7 @@ export default function UsersTab({
           className="rounded-xl px-4 py-3"
           style={{ backgroundColor: "rgba(192,57,43,0.08)" }}
         >
-          <p className="font-rethink text-sm" style={{ color: "#C0392B" }}>
+          <p className="text-sm" style={{ color: "#C0392B" }}>
             {error}
           </p>
         </div>
@@ -88,14 +88,14 @@ export default function UsersTab({
           placeholder="Search by name or email…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-border bg-surface py-2 pl-9 pr-4 font-rethink text-sm text-text-primary placeholder:text-text-secondary/70 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full rounded-xl border border-border bg-surface py-2 pl-9 pr-4 text-sm text-text-primary placeholder:text-text-secondary/70 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
         {filtered.length === 0 ? (
-          <p className="px-5 py-10 text-center font-rethink text-sm text-text-secondary">
+          <p className="px-5 py-10 text-center text-sm text-text-secondary">
             {search ? `No users matching "${search}"` : "No users yet"}
           </p>
         ) : (
@@ -106,7 +106,7 @@ export default function UsersTab({
                   (h) => (
                     <th
                       key={h}
-                      className="px-4 py-3 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary"
+                      className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-text-secondary"
                     >
                       {h}
                     </th>
@@ -133,7 +133,7 @@ export default function UsersTab({
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 font-fraunces text-xs font-semibold text-primary">
                           {(user.full_name ?? user.email).charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-rethink text-sm text-text-primary">
+                        <span className="text-sm text-text-primary">
                           {user.full_name ?? (
                             <span className="text-text-secondary italic">No name</span>
                           )}
@@ -141,7 +141,7 @@ export default function UsersTab({
                       </div>
                     </td>
                     {/* Email */}
-                    <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                    <td className="px-4 py-3 text-sm text-text-secondary">
                       {user.email}
                     </td>
                     {/* Role dropdown */}
@@ -155,7 +155,7 @@ export default function UsersTab({
                               handleRoleChange(user.id, e.target.value as Role)
                             }
                             className={cn(
-                              "appearance-none rounded-full py-0.5 pl-2.5 pr-6 font-rethink text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 cursor-pointer",
+                              "appearance-none rounded-full py-0.5 pl-2.5 pr-6 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 cursor-pointer",
                               ROLE_STYLES[user.role] ?? "bg-stone-100 text-stone-500"
                             )}
                           >
@@ -182,15 +182,15 @@ export default function UsersTab({
                       </div>
                     </td>
                     {/* Scans */}
-                    <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                    <td className="px-4 py-3 text-sm text-text-secondary">
                       {user.scan_count.toLocaleString()}
                     </td>
                     {/* Reports */}
-                    <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                    <td className="px-4 py-3 text-sm text-text-secondary">
                       {Number(user.report_count).toLocaleString()}
                     </td>
                     {/* Joined */}
-                    <td className="whitespace-nowrap px-4 py-3 font-rethink text-xs text-text-secondary">
+                    <td className="whitespace-nowrap px-4 py-3 text-xs text-text-secondary">
                       {new Date(user.created_at).toLocaleDateString("en-GB", {
                         day: "numeric",
                         month: "short",

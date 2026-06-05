@@ -89,7 +89,7 @@ export default function SubmissionsTab({
         <h1 className="font-fraunces text-2xl font-semibold text-text-primary">
           Submissions
         </h1>
-        <p className="mt-0.5 font-rethink text-sm text-text-secondary">
+        <p className="mt-0.5 text-sm text-text-secondary">
           {initialSubmissions.length} pending brand submission{initialSubmissions.length !== 1 ? "s" : ""}
         </p>
       </div>
@@ -99,7 +99,7 @@ export default function SubmissionsTab({
           className="rounded-xl px-4 py-3"
           style={{ backgroundColor: "rgba(192,57,43,0.08)" }}
         >
-          <p className="font-rethink text-sm" style={{ color: "#C0392B" }}>
+          <p className="text-sm" style={{ color: "#C0392B" }}>
             {error}
           </p>
         </div>
@@ -107,7 +107,7 @@ export default function SubmissionsTab({
 
       <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
         {initialSubmissions.length === 0 ? (
-          <p className="px-5 py-10 text-center font-rethink text-sm text-text-secondary">
+          <p className="px-5 py-10 text-center text-sm text-text-secondary">
             No pending submissions
           </p>
         ) : (
@@ -125,7 +125,7 @@ export default function SubmissionsTab({
                 ].map((h) => (
                   <th
                     key={h}
-                    className="px-4 py-3 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary"
+                    className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-text-secondary"
                   >
                     {h}
                   </th>
@@ -160,11 +160,11 @@ export default function SubmissionsTab({
                         }
                       </td>
                       {/* Brand */}
-                      <td className="px-4 py-3 font-rethink text-sm font-medium text-text-primary">
+                      <td className="px-4 py-3 text-sm font-medium text-text-primary">
                         {brandName}
                       </td>
                       {/* Product */}
-                      <td className="px-4 py-3 font-rethink text-sm text-text-primary">
+                      <td className="px-4 py-3 text-sm text-text-primary">
                         {sub.product_name}
                       </td>
                       {/* Barcode */}
@@ -173,12 +173,12 @@ export default function SubmissionsTab({
                       </td>
                       {/* Category */}
                       <td className="px-4 py-3">
-                        <span className="rounded-full border border-border px-2.5 py-0.5 font-rethink text-xs text-text-secondary">
+                        <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-text-secondary">
                           {sub.category}
                         </span>
                       </td>
                       {/* Date */}
-                      <td className="whitespace-nowrap px-4 py-3 font-rethink text-xs text-text-secondary">
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-text-secondary">
                         {new Date(sub.created_at).toLocaleDateString("en-GB", {
                           day: "numeric",
                           month: "short",
@@ -197,7 +197,7 @@ export default function SubmissionsTab({
                               <button
                                 onClick={() => handleApproveConfirm(sub.id)}
                                 disabled={isPending || isApproving}
-                                className="whitespace-nowrap rounded-lg border border-emerald-300 bg-emerald-500 px-2.5 py-1 font-rethink text-xs font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"
+                                className="whitespace-nowrap rounded-lg border border-emerald-300 bg-emerald-500 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"
                               >
                                 {isApproving ? (
                                   <Loader2 size={11} className="animate-spin" />
@@ -207,7 +207,7 @@ export default function SubmissionsTab({
                               </button>
                               <button
                                 onClick={() => setConfirmingId(null)}
-                                className="rounded-lg border border-border px-2.5 py-1 font-rethink text-xs font-medium text-text-secondary hover:bg-background transition-colors"
+                                className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-text-secondary hover:bg-background transition-colors"
                               >
                                 Cancel
                               </button>
@@ -216,7 +216,7 @@ export default function SubmissionsTab({
                             <button
                               onClick={() => handleApproveFirst(sub.id)}
                               disabled={isPending || isApproving}
-                              className="whitespace-nowrap rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-rethink text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50"
+                              className="whitespace-nowrap rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50"
                             >
                               {isApproving ? (
                                 <Loader2 size={11} className="animate-spin" />
@@ -233,7 +233,7 @@ export default function SubmissionsTab({
                                 setRejectNote("");
                               }}
                               disabled={isPending}
-                              className="whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 font-rethink text-xs font-medium text-stone-600 transition-colors hover:bg-stone-100 disabled:opacity-50"
+                              className="whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-medium text-stone-600 transition-colors hover:bg-stone-100 disabled:opacity-50"
                             >
                               Reject
                             </button>
@@ -253,7 +253,7 @@ export default function SubmissionsTab({
                           className="bg-red-50/60 px-6 py-4"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <p className="mb-2 font-rethink text-xs font-semibold uppercase tracking-wide text-red-600">
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-red-600">
                             Rejection Note (required)
                           </p>
                           <textarea
@@ -262,13 +262,13 @@ export default function SubmissionsTab({
                             placeholder="Explain why this submission is being rejected…"
                             value={rejectNote}
                             onChange={(e) => setRejectNote(e.target.value)}
-                            className="w-full max-w-lg resize-none rounded-xl border border-red-200 bg-white px-4 py-2.5 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
+                            className="w-full max-w-lg resize-none rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
                           />
                           <div className="mt-2 flex items-center gap-2">
                             <button
                               onClick={() => handleRejectSubmit(sub.id)}
                               disabled={!rejectNote.trim() || isPending || rejecting === sub.id}
-                              className="flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 font-rethink text-xs font-medium text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+                              className="flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
                             >
                               {rejecting === sub.id && (
                                 <Loader2 size={11} className="animate-spin" />
@@ -280,7 +280,7 @@ export default function SubmissionsTab({
                                 setRejectingId(null);
                                 setRejectNote("");
                               }}
-                              className="rounded-lg border border-border px-3 py-1.5 font-rethink text-xs font-medium text-text-secondary hover:bg-background transition-colors"
+                              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-background transition-colors"
                             >
                               Cancel
                             </button>
@@ -301,10 +301,10 @@ export default function SubmissionsTab({
                             <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3">
                               {sub.size_ml && (
                                 <div>
-                                  <p className="mb-0.5 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                                  <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">
                                     Size
                                   </p>
-                                  <p className="font-rethink text-sm text-text-primary">
+                                  <p className="text-sm text-text-primary">
                                     {sub.size_ml} ml
                                   </p>
                                 </div>
@@ -312,20 +312,20 @@ export default function SubmissionsTab({
                               {sub.authenticated_retailers &&
                                 sub.authenticated_retailers.length > 0 && (
                                   <div className="col-span-2">
-                                    <p className="mb-0.5 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                                    <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">
                                       Authenticated Retailers
                                     </p>
-                                    <p className="font-rethink text-sm text-text-primary">
+                                    <p className="text-sm text-text-primary">
                                       {sub.authenticated_retailers.join(", ")}
                                     </p>
                                   </div>
                                 )}
                               {sub.packaging_notes && (
                                 <div className="col-span-full">
-                                  <p className="mb-0.5 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                                  <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">
                                     Packaging Notes
                                   </p>
-                                  <p className="font-rethink text-sm text-text-primary">
+                                  <p className="text-sm text-text-primary">
                                     {sub.packaging_notes}
                                   </p>
                                 </div>
@@ -335,7 +335,7 @@ export default function SubmissionsTab({
                             {/* Reject note input inside expanded view */}
                             {isRejecting && (
                               <div onClick={(e) => e.stopPropagation()}>
-                                <p className="mb-1.5 font-rethink text-xs font-semibold uppercase tracking-wide text-red-600">
+                                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-red-600">
                                   Rejection Note (required)
                                 </p>
                                 <textarea
@@ -344,13 +344,13 @@ export default function SubmissionsTab({
                                   placeholder="Explain why this submission is being rejected…"
                                   value={rejectNote}
                                   onChange={(e) => setRejectNote(e.target.value)}
-                                  className="w-full max-w-lg resize-none rounded-xl border border-red-200 bg-background px-4 py-2.5 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
+                                  className="w-full max-w-lg resize-none rounded-xl border border-red-200 bg-background px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
                                 />
                                 <div className="mt-2 flex items-center gap-2">
                                   <button
                                     onClick={() => handleRejectSubmit(sub.id)}
                                     disabled={!rejectNote.trim() || isPending || rejecting === sub.id}
-                                    className="flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 font-rethink text-xs font-medium text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+                                    className="flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
                                   >
                                     {rejecting === sub.id && (
                                       <Loader2 size={11} className="animate-spin" />
@@ -362,7 +362,7 @@ export default function SubmissionsTab({
                                       setRejectingId(null);
                                       setRejectNote("");
                                     }}
-                                    className="rounded-lg border border-border px-3 py-1.5 font-rethink text-xs font-medium text-text-secondary hover:bg-background transition-colors"
+                                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-background transition-colors"
                                   >
                                     Cancel
                                   </button>

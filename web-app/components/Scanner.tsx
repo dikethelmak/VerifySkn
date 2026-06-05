@@ -346,7 +346,7 @@ function PermissionPending() {
       className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-neutral-950/80 px-8 text-center"
     >
       <CameraIcon className="h-12 w-12 text-primary/70" />
-      <p className="font-rethink text-sm leading-relaxed text-white/70">
+      <p className="text-sm leading-relaxed text-white/70">
         Allow camera access to start scanning
       </p>
     </motion.div>
@@ -362,7 +362,7 @@ function PermissionDenied() {
       className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-neutral-950/90 px-8 text-center"
     >
       <CameraBlockedIcon className="h-12 w-12 text-danger/80" />
-      <p className="font-rethink text-sm leading-relaxed text-white/75">
+      <p className="text-sm leading-relaxed text-white/75">
         Camera access is needed to scan products. Please allow access in your
         browser settings.
       </p>
@@ -403,7 +403,7 @@ interface ManualEntryProps {
 function ManualEntry({ value, onChange, onSubmit }: ManualEntryProps) {
   return (
     <div className="w-full max-w-sm">
-      <p className="mb-2.5 font-rethink text-sm text-text-secondary">
+      <p className="mb-2.5 text-sm text-text-secondary">
         Or enter barcode manually
       </p>
       <form onSubmit={onSubmit} className="flex gap-2">
@@ -426,7 +426,7 @@ function ManualEntry({ value, onChange, onSubmit }: ManualEntryProps) {
           disabled={!value.trim()}
           className={cn(
             "rounded-lg bg-primary px-5 py-2.5",
-            "font-rethink text-sm font-medium text-white",
+            "text-sm font-medium text-white",
             "transition-colors hover:bg-primary/90 active:scale-[0.97]",
             "disabled:pointer-events-none disabled:opacity-40"
           )}

@@ -51,7 +51,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
       </div>
       {config && (
         <p
-          className="mt-1 font-rethink text-[12px] font-medium"
+          className="mt-1 text-[12px] font-medium"
           style={{ color: config.color }}
         >
           {config.label}
@@ -88,7 +88,7 @@ function Field({
     <div>
       <label
         htmlFor={id}
-        className="mb-1.5 block font-rethink text-sm font-medium text-text-primary"
+        className="mb-1.5 block text-sm font-medium text-text-primary"
       >
         {label}
       </label>
@@ -99,12 +99,12 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-border bg-background px-4 py-2.5 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
         style={error ? { borderColor: "#C0392B" } : {}}
       />
       {children}
       {error && (
-        <p className="mt-1 font-rethink text-[13px]" style={{ color: "#C0392B" }}>
+        <p className="mt-1 text-[13px]" style={{ color: "#C0392B" }}>
           {error}
         </p>
       )}
@@ -183,7 +183,7 @@ export default function SignupPage() {
           </span>
         </Link>
 
-        <p className="mb-6 text-center font-rethink text-sm text-text-secondary">
+        <p className="mb-6 text-center text-sm text-text-secondary">
           Create your account
         </p>
 
@@ -193,7 +193,7 @@ export default function SignupPage() {
             className="mb-5 rounded-xl px-4 py-3"
             style={{ backgroundColor: "rgba(192,57,43,0.07)" }}
           >
-            <p className="font-rethink text-[13px]" style={{ color: "#C0392B" }}>
+            <p className="text-[13px]" style={{ color: "#C0392B" }}>
               {errors.general}
             </p>
           </div>
@@ -224,7 +224,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="password"
-              className="mb-1.5 block font-rethink text-sm font-medium text-text-primary"
+              className="mb-1.5 block text-sm font-medium text-text-primary"
             >
               Password
             </label>
@@ -235,12 +235,12 @@ export default function SignupPage() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
               style={errors.password ? { borderColor: "#C0392B" } : {}}
             />
             <PasswordStrengthBar password={password} />
             {errors.password && (
-              <p className="mt-1 font-rethink text-[13px]" style={{ color: "#C0392B" }}>
+              <p className="mt-1 text-[13px]" style={{ color: "#C0392B" }}>
                 {errors.password}
               </p>
             )}
@@ -260,14 +260,14 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3 font-rethink text-base font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98] disabled:opacity-60"
+            className="mt-1 flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98] disabled:opacity-60"
           >
             {loading ? "Creating account…" : "Create account"}
           </button>
         </form>
 
         {/* Sign in link */}
-        <p className="mt-7 text-center font-rethink text-sm text-text-secondary">
+        <p className="mt-7 text-center text-sm text-text-secondary">
           Already have an account?{" "}
           <Link
             href="/auth/login"

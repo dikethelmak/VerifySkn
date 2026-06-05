@@ -56,7 +56,7 @@ export default function OverviewTab({
         <h1 className="font-fraunces text-2xl font-semibold text-text-primary">
           Overview
         </h1>
-        <p className="mt-0.5 font-rethink text-sm text-text-secondary">
+        <p className="mt-0.5 text-sm text-text-secondary">
           Platform health at a glance
         </p>
       </div>
@@ -71,7 +71,7 @@ export default function OverviewTab({
             <p className="font-fraunces text-[40px] font-semibold leading-none text-text-primary">
               {card.value.toLocaleString()}
             </p>
-            <p className="mt-2.5 font-rethink text-sm font-normal text-text-secondary">
+            <p className="mt-2.5 text-sm font-normal text-text-secondary">
               {card.label}
             </p>
           </div>
@@ -81,13 +81,13 @@ export default function OverviewTab({
       {/* ── Recent activity feed ── */}
       <div className="rounded-2xl border border-border bg-surface shadow-sm">
         <div className="border-b border-border px-5 py-4">
-          <p className="font-rethink text-sm font-semibold text-text-primary">
+          <p className="text-sm font-semibold text-text-primary">
             Recent Activity
           </p>
         </div>
 
         {activity.length === 0 ? (
-          <p className="px-5 py-10 text-center font-rethink text-sm text-text-secondary">
+          <p className="px-5 py-10 text-center text-sm text-text-secondary">
             No recent activity
           </p>
         ) : (
@@ -107,7 +107,7 @@ export default function OverviewTab({
                   </div>
 
                   {/* Description */}
-                  <p className="flex-1 font-rethink text-sm text-text-primary line-clamp-1">
+                  <p className="flex-1 text-sm text-text-primary line-clamp-1">
                     {item.description}
                   </p>
 

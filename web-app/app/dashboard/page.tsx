@@ -41,7 +41,7 @@ function StatCard({ value, label }: { value: number | string; label: string }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
       <p className="font-fraunces text-3xl font-semibold text-primary">{value}</p>
-      <p className="mt-1 font-rethink text-sm text-text-secondary">{label}</p>
+      <p className="mt-1 text-sm text-text-secondary">{label}</p>
     </div>
   );
 }
@@ -70,7 +70,7 @@ function VerdictBadge({ verdict }: { verdict: ScanVerdict }) {
   const { bg, text } = map[verdict];
   return (
     <span
-      className="inline-block rounded-full px-2.5 py-0.5 font-rethink text-xs font-medium capitalize"
+      className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium capitalize"
       style={{ backgroundColor: bg, color: text }}
     >
       {verdict}
@@ -91,7 +91,7 @@ function StatusBadge({ status }: { status: ReportStatus }) {
   const { bg, text, label } = map[status];
   return (
     <span
-      className="inline-block rounded-full px-2.5 py-0.5 font-rethink text-xs font-medium"
+      className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
       style={{ backgroundColor: bg, color: text }}
     >
       {label}
@@ -107,7 +107,7 @@ function ReportTypeBadge({ type }: { type: ReportType }) {
     other:       "Other",
   };
   return (
-    <span className="inline-block rounded-full border border-border bg-background px-2.5 py-0.5 font-rethink text-xs text-text-secondary">
+    <span className="inline-block rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-text-secondary">
       {labels[type]}
     </span>
   );
@@ -122,7 +122,7 @@ function RoleBadge({ role }: { role: string }) {
   const { bg, text } = map[role] ?? map.user;
   return (
     <span
-      className="inline-block rounded-full px-3 py-1 font-rethink text-xs font-medium capitalize"
+      className="inline-block rounded-full px-3 py-1 text-xs font-medium capitalize"
       style={{ backgroundColor: bg, color: text }}
     >
       {role.replace("_", " ")}
@@ -133,7 +133,7 @@ function RoleBadge({ role }: { role: string }) {
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="rounded-2xl border border-border bg-surface px-5 py-10 text-center">
-      <p className="font-rethink text-sm text-text-secondary">{message}</p>
+      <p className="text-sm text-text-secondary">{message}</p>
     </div>
   );
 }
@@ -217,7 +217,7 @@ export default async function DashboardPage() {
             <h1 className="font-fraunces text-[32px] font-semibold leading-tight text-text-primary">
               Welcome back, {firstName}
             </h1>
-            <p className="mt-1 font-rethink text-sm text-text-secondary">{today}</p>
+            <p className="mt-1 text-sm text-text-secondary">{today}</p>
           </div>
 
           {/* Personal stats */}
@@ -235,7 +235,7 @@ export default async function DashboardPage() {
               action={
                 <Link
                   href="/history"
-                  className="font-rethink text-sm text-primary underline-offset-2 hover:underline"
+                  className="text-sm text-primary underline-offset-2 hover:underline"
                 >
                   View all →
                 </Link>
@@ -252,7 +252,7 @@ export default async function DashboardPage() {
                       {["Date", "Barcode", "Product", "Result", "Confidence"].map((h) => (
                         <th
                           key={h}
-                          className="px-4 py-3 font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary"
+                          className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-text-secondary"
                         >
                           {h}
                         </th>
@@ -268,7 +268,7 @@ export default async function DashboardPage() {
                           i < myScans.length - 1 && "border-b border-border"
                         )}
                       >
-                        <td className="whitespace-nowrap px-4 py-3 font-rethink text-xs text-text-secondary">
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-text-secondary">
                           {formatDate(scan.scanned_at)}
                         </td>
                         <td className="px-4 py-3">
@@ -279,7 +279,7 @@ export default async function DashboardPage() {
                             {scan.barcode_scanned}
                           </Link>
                         </td>
-                        <td className="px-4 py-3 font-rethink text-sm text-text-primary">
+                        <td className="px-4 py-3 text-sm text-text-primary">
                           {scan.product?.name ?? (
                             <span className="text-text-secondary">Unknown</span>
                           )}
@@ -305,7 +305,7 @@ export default async function DashboardPage() {
               action={
                 <ReportButton
                   label="+ Submit New Report"
-                  className="rounded-xl bg-primary px-4 py-2 font-rethink text-sm font-medium text-white transition-colors hover:bg-primary/90"
+                  className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90"
                 />
               }
             />
@@ -320,7 +320,7 @@ export default async function DashboardPage() {
                       {["Date", "Barcode", "Type", "Status", "Upvotes"].map((h) => (
                         <th
                           key={h}
-                          className="px-4 py-3 font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary"
+                          className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-text-secondary"
                         >
                           {h}
                         </th>
@@ -336,7 +336,7 @@ export default async function DashboardPage() {
                           i < myReports.length - 1 && "border-b border-border"
                         )}
                       >
-                        <td className="whitespace-nowrap px-4 py-3 font-rethink text-xs text-text-secondary">
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-text-secondary">
                           {formatDateShort(report.created_at)}
                         </td>
                         <td className="px-4 py-3 font-mono text-sm text-text-primary">
@@ -374,10 +374,10 @@ export default async function DashboardPage() {
               </span>
             </div>
 
-            <p className="mt-4 font-rethink text-base font-semibold text-text-primary">
+            <p className="mt-4 text-base font-semibold text-text-primary">
               {fullName ?? firstName}
             </p>
-            <p className="font-rethink text-sm text-text-secondary">{user.email}</p>
+            <p className="text-sm text-text-secondary">{user.email}</p>
 
             <div className="mt-3">
               <RoleBadge role={profile?.role ?? "user"} />
@@ -385,7 +385,7 @@ export default async function DashboardPage() {
 
             <Link
               href="/dashboard/profile"
-              className="mt-4 inline-block font-rethink text-sm text-primary underline-offset-2 hover:underline"
+              className="mt-4 inline-block text-sm text-primary underline-offset-2 hover:underline"
             >
               Edit Profile →
             </Link>
@@ -394,7 +394,7 @@ export default async function DashboardPage() {
           {/* Community activity */}
           <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-rethink text-sm font-semibold text-text-primary">
+              <h3 className="text-sm font-semibold text-text-primary">
                 Community Activity
               </h3>
               {isTopReporter && (
@@ -408,7 +408,7 @@ export default async function DashboardPage() {
             </div>
 
             {recentUpvotes.length === 0 ? (
-              <p className="font-rethink text-sm text-text-secondary">
+              <p className="text-sm text-text-secondary">
                 Reports you upvote will appear here.
               </p>
             ) : (
@@ -419,7 +419,7 @@ export default async function DashboardPage() {
                       {upvote.reports?.barcode ?? upvote.report_id.slice(0, 8)}
                     </p>
                     {upvote.reports && (
-                      <p className="font-rethink text-xs capitalize text-text-secondary">
+                      <p className="text-xs capitalize text-text-secondary">
                         {upvote.reports.report_type.replace("_", " ")} ·{" "}
                         {upvote.reports.status}
                       </p>
@@ -433,7 +433,7 @@ export default async function DashboardPage() {
           {/* Quick scan CTA */}
           <Link
             href="/"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-rethink text-base font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98]"
           >
             <ScanIcon className="h-5 w-5" />
             Scan a Product

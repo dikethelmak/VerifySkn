@@ -28,7 +28,7 @@ const CATEGORIES = [
 ];
 
 const CELL_INPUT =
-  "w-full rounded-lg border border-border bg-background px-2.5 py-1.5 font-rethink text-sm text-text-primary focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20";
+  "w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm text-text-primary focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20";
 
 // ── Edit state ─────────────────────────────────────────────────
 
@@ -137,14 +137,14 @@ export default function ProductsTab({
         <h1 className="font-fraunces text-2xl font-semibold text-text-primary">
           Products
         </h1>
-        <p className="mt-0.5 font-rethink text-sm text-text-secondary">
+        <p className="mt-0.5 text-sm text-text-secondary">
           {initialProducts.length} product{initialProducts.length !== 1 ? "s" : ""} in the verification database
         </p>
       </div>
 
       {error && (
         <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "rgba(192,57,43,0.08)" }}>
-          <p className="font-rethink text-sm" style={{ color: "#C0392B" }}>
+          <p className="text-sm" style={{ color: "#C0392B" }}>
             {error}
           </p>
         </div>
@@ -159,12 +159,12 @@ export default function ProductsTab({
             placeholder="Search by name, brand, or barcode…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-border bg-surface py-2.5 pl-9 pr-4 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-xl border border-border bg-surface py-2.5 pl-9 pr-4 text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <button
           onClick={() => setSlideoverOpen(true)}
-          className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-rethink text-sm font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98]"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98]"
         >
           <Plus size={15} strokeWidth={2.5} />
           Add Product
@@ -179,7 +179,7 @@ export default function ProductsTab({
               {["Name", "Barcode", "Brand", "Category", "Size", "Country", "Actions"].map((h) => (
                 <th
                   key={h}
-                  className="whitespace-nowrap px-4 py-3 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary"
+                  className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-text-secondary"
                 >
                   {h}
                 </th>
@@ -189,7 +189,7 @@ export default function ProductsTab({
           <tbody>
             {products.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center font-rethink text-sm text-text-secondary">
+                <td colSpan={7} className="px-4 py-10 text-center text-sm text-text-secondary">
                   {search ? "No products match your search" : "No products yet"}
                 </td>
               </tr>
@@ -283,22 +283,22 @@ export default function ProductsTab({
                       </>
                     ) : (
                       <>
-                        <td className="max-w-[180px] px-4 py-3 font-rethink text-sm font-medium text-text-primary">
+                        <td className="max-w-[180px] px-4 py-3 text-sm font-medium text-text-primary">
                           <span className="line-clamp-1">{p.name}</span>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-text-secondary">
                           {p.barcode}
                         </td>
-                        <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                        <td className="px-4 py-3 text-sm text-text-secondary">
                           {p.brand}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 font-rethink text-sm text-text-secondary">
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-text-secondary">
                           {p.category}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 font-rethink text-sm text-text-secondary">
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-text-secondary">
                           {p.size_ml ? `${p.size_ml} ml` : "—"}
                         </td>
-                        <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                        <td className="px-4 py-3 text-sm text-text-secondary">
                           {p.country_of_manufacture || "—"}
                         </td>
                         <td className="px-4 py-3">
@@ -350,7 +350,7 @@ export default function ProductsTab({
               <h3 className="font-fraunces text-lg font-semibold text-text-primary">
                 Delete Product
               </h3>
-              <p className="mt-2 font-rethink text-sm text-text-secondary">
+              <p className="mt-2 text-sm text-text-secondary">
                 This will remove{" "}
                 <span className="font-medium text-text-primary">
                   {deleteTarget.name}
@@ -361,7 +361,7 @@ export default function ProductsTab({
                 <button
                   onClick={handleDelete}
                   disabled={isPending}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 font-rethink text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-60"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-60"
                   style={{ backgroundColor: "#C0392B" }}
                 >
                   {isPending && <Loader2 size={14} className="animate-spin" />}
@@ -369,7 +369,7 @@ export default function ProductsTab({
                 </button>
                 <button
                   onClick={() => setDeleteTarget(null)}
-                  className="flex-1 rounded-xl border border-border py-2.5 font-rethink text-sm font-medium text-text-secondary transition-colors hover:bg-background"
+                  className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-background"
                 >
                   Cancel
                 </button>
@@ -398,7 +398,7 @@ export default function ProductsTab({
 // ── Add Product Slideover ──────────────────────────────────────
 
 const FIELD_INPUT =
-  "w-full rounded-xl border border-border bg-background px-4 py-2.5 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20";
 
 function AddProductSlideover({
   onClose,
@@ -502,7 +502,7 @@ function AddProductSlideover({
         <div className="flex-1 overflow-y-auto px-6 py-6">
           {serverError && (
             <div className="mb-5 rounded-xl px-4 py-3" style={{ backgroundColor: "rgba(192,57,43,0.08)" }}>
-              <p className="font-rethink text-sm" style={{ color: "#C0392B" }}>{serverError}</p>
+              <p className="text-sm" style={{ color: "#C0392B" }}>{serverError}</p>
             </div>
           )}
 
@@ -590,7 +590,7 @@ function AddProductSlideover({
                   {retailers.map((r) => (
                     <span
                       key={r}
-                      className="flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 font-rethink text-xs text-text-primary"
+                      className="flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-text-primary"
                     >
                       {r}
                       <button
@@ -633,7 +633,7 @@ function AddProductSlideover({
           <button
             onClick={handleSubmit}
             disabled={isPending}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-rethink text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
           >
             {isPending && <Loader2 size={15} className="animate-spin" />}
             {isPending ? "Adding…" : "Add Product"}
@@ -655,12 +655,12 @@ function SlideField({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block font-rethink text-sm font-medium text-text-primary">
+      <label className="mb-1.5 block text-sm font-medium text-text-primary">
         {label}
       </label>
       {children}
       {error && (
-        <p className="mt-1 font-rethink text-[13px]" style={{ color: "#C0392B" }}>
+        <p className="mt-1 text-[13px]" style={{ color: "#C0392B" }}>
           {error}
         </p>
       )}

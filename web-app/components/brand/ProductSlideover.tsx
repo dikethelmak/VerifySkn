@@ -34,7 +34,7 @@ const CATEGORIES = [
 ];
 
 const INPUT_CLASS =
-  "w-full rounded-xl border border-border bg-background px-4 py-2.5 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20";
 
 // ── Props ─────────────────────────────────────────────────────
 
@@ -172,12 +172,12 @@ export function ProductSlideover({ isOpen, onClose, brandId, userId, onSuccess }
                   <p className="mt-5 font-fraunces text-2xl font-semibold text-primary">
                     Submitted for Review
                   </p>
-                  <p className="mt-2 font-rethink text-sm text-text-secondary">
+                  <p className="mt-2 text-sm text-text-secondary">
                     Typically approved within 24 hours. We&apos;ll notify you once it goes live.
                   </p>
                   <button
                     onClick={() => { resetForm(); }}
-                    className="mt-8 rounded-xl border border-primary px-6 py-2.5 font-rethink text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+                    className="mt-8 rounded-xl border border-primary px-6 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
                   >
                     Submit Another
                   </button>
@@ -189,7 +189,7 @@ export function ProductSlideover({ isOpen, onClose, brandId, userId, onSuccess }
                       className="rounded-xl px-4 py-3"
                       style={{ backgroundColor: "rgba(192,57,43,0.07)" }}
                     >
-                      <p className="font-rethink text-[13px]" style={{ color: "#C0392B" }}>
+                      <p className="text-[13px]" style={{ color: "#C0392B" }}>
                         {errors.general}
                       </p>
                     </div>
@@ -219,7 +219,7 @@ export function ProductSlideover({ isOpen, onClose, brandId, userId, onSuccess }
                       style={errors.barcode ? { borderColor: "#C0392B" } : {}}
                     />
                     {barcode && !errors.barcode && isValidBarcode(barcode) && (
-                      <p className="mt-1 font-rethink text-[12px]" style={{ color: "#2D7A4F" }}>
+                      <p className="mt-1 text-[12px]" style={{ color: "#2D7A4F" }}>
                         ✓ Valid {barcode.length === 13 ? "EAN-13" : "UPC-A"}
                       </p>
                     )}
@@ -261,7 +261,7 @@ export function ProductSlideover({ isOpen, onClose, brandId, userId, onSuccess }
                         {retailers.map((r) => (
                           <span
                             key={r}
-                            className="flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 font-rethink text-xs text-text-primary"
+                            className="flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-text-primary"
                           >
                             {r}
                             <button
@@ -284,7 +284,7 @@ export function ProductSlideover({ isOpen, onClose, brandId, userId, onSuccess }
                       onBlur={addRetailer}
                       className={INPUT_CLASS}
                     />
-                    <p className="mt-1 font-rethink text-[12px] text-text-secondary">
+                    <p className="mt-1 text-[12px] text-text-secondary">
                       Press Enter to add each retailer
                     </p>
                   </FormField>
@@ -310,7 +310,7 @@ export function ProductSlideover({ isOpen, onClose, brandId, userId, onSuccess }
                 <button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3 font-rethink text-base font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98] disabled:opacity-60"
+                  className="flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98] disabled:opacity-60"
                 >
                   {submitting ? "Submitting…" : "Submit for Review"}
                 </button>
@@ -334,12 +334,12 @@ function FormField({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block font-rethink text-sm font-medium text-text-primary">
+      <label className="mb-1.5 block text-sm font-medium text-text-primary">
         {label}
       </label>
       {children}
       {error && (
-        <p className="mt-1 font-rethink text-[13px]" style={{ color: "#C0392B" }}>
+        <p className="mt-1 text-[13px]" style={{ color: "#C0392B" }}>
           {error}
         </p>
       )}

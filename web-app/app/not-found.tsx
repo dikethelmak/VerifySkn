@@ -69,7 +69,7 @@ export default function NotFound() {
       <h1 className="mt-5 font-fraunces text-4xl font-semibold text-text-primary">
         Page not found
       </h1>
-      <p className="mt-3 max-w-sm font-rethink text-base text-text-secondary">
+      <p className="mt-3 max-w-sm text-base text-text-secondary">
         The page you&apos;re looking for doesn&apos;t exist or may have been
         moved.
       </p>
@@ -77,13 +77,13 @@ export default function NotFound() {
       <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
         <Link
           href="/"
-          className="rounded-xl bg-primary px-8 py-3 font-rethink text-sm font-medium text-white transition-colors hover:bg-primary/90"
+          className="rounded-xl bg-primary px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-primary/90"
         >
           Back to Home
         </Link>
         <Link
           href="/"
-          className="rounded-xl border border-primary px-8 py-3 font-rethink text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+          className="rounded-xl border border-primary px-8 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
         >
           Scan a Product
         </Link>

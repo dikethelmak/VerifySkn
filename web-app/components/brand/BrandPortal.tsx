@@ -95,7 +95,7 @@ export default function BrandPortal({
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`relative px-5 py-3 font-rethink text-sm font-medium transition-colors ${
+            className={`relative px-5 py-3 text-sm font-medium transition-colors ${
               activeTab === tab ? "text-primary" : "text-text-secondary hover:text-text-primary"
             }`}
           >
@@ -169,7 +169,7 @@ function ProductsTab({
       {/* Action bar */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-rethink text-sm text-text-secondary">
+          <p className="text-sm text-text-secondary">
             {products.length} product{products.length !== 1 ? "s" : ""} listed
             {pendingCount > 0 && (
               <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
@@ -180,7 +180,7 @@ function ProductsTab({
         </div>
         <button
           onClick={onAddProduct}
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-rethink text-sm font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98]"
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98]"
         >
           <Plus size={15} strokeWidth={2.5} />
           Add Product
@@ -197,7 +197,7 @@ function ProductsTab({
                   {["Product Name", "Barcode", "Category", "Retailers", "Updated"].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary"
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary"
                     >
                       {h}
                     </th>
@@ -212,21 +212,21 @@ function ProductsTab({
                       i !== products.length - 1 ? "border-b border-border" : ""
                     }`}
                   >
-                    <td className="px-4 py-3 font-rethink text-sm font-medium text-text-primary">
+                    <td className="px-4 py-3 text-sm font-medium text-text-primary">
                       {p.name}
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-text-secondary">
                       {p.barcode}
                     </td>
-                    <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                    <td className="px-4 py-3 text-sm text-text-secondary">
                       {p.category}
                     </td>
-                    <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                    <td className="px-4 py-3 text-sm text-text-secondary">
                       {p.authenticated_retailers.length > 0
                         ? p.authenticated_retailers.length
                         : <span className="text-text-secondary/40">—</span>}
                     </td>
-                    <td className="px-4 py-3 font-rethink text-xs text-text-secondary">
+                    <td className="px-4 py-3 text-xs text-text-secondary">
                       {new Date(p.updated_at).toLocaleDateString("en-GB", {
                         day: "numeric", month: "short", year: "numeric",
                       })}
@@ -242,7 +242,7 @@ function ProductsTab({
       {/* Pending submissions */}
       {submissions.length > 0 && (
         <div>
-          <p className="mb-3 font-rethink text-sm font-semibold text-text-primary">
+          <p className="mb-3 text-sm font-semibold text-text-primary">
             Pending Submissions
           </p>
           <div className="rounded-2xl border border-border bg-surface shadow-sm">
@@ -253,7 +253,7 @@ function ProductsTab({
                     {["Product Name", "Barcode", "Category", "Submitted", "Status"].map((h) => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary"
+                        className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary"
                       >
                         {h}
                       </th>
@@ -268,23 +268,23 @@ function ProductsTab({
                         i !== submissions.length - 1 ? "border-b border-border" : ""
                       }`}
                     >
-                      <td className="px-4 py-3 font-rethink text-sm font-medium text-text-primary">
+                      <td className="px-4 py-3 text-sm font-medium text-text-primary">
                         {s.product_name}
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-text-secondary">
                         {s.barcode}
                       </td>
-                      <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                      <td className="px-4 py-3 text-sm text-text-secondary">
                         {s.category}
                       </td>
-                      <td className="px-4 py-3 font-rethink text-xs text-text-secondary">
+                      <td className="px-4 py-3 text-xs text-text-secondary">
                         {new Date(s.created_at).toLocaleDateString("en-GB", {
                           day: "numeric", month: "short", year: "numeric",
                         })}
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`rounded-full px-2.5 py-0.5 font-rethink text-xs font-medium capitalize ${STATUS_STYLES[s.status] ?? ""}`}
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[s.status] ?? ""}`}
                         >
                           {s.status}
                         </span>
@@ -303,12 +303,12 @@ function ProductsTab({
           <p className="font-fraunces text-lg font-semibold text-text-primary">
             No products yet
           </p>
-          <p className="mt-1 font-rethink text-sm text-text-secondary">
+          <p className="mt-1 text-sm text-text-secondary">
             Add your first product to start tracking scans and reports.
           </p>
           <button
             onClick={onAddProduct}
-            className="mt-5 flex items-center gap-2 mx-auto rounded-xl bg-primary px-5 py-2.5 font-rethink text-sm font-medium text-white transition-colors hover:bg-primary/90"
+            className="mt-5 flex items-center gap-2 mx-auto rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary/90"
           >
             <Plus size={15} strokeWidth={2.5} />
             Add Product
@@ -343,7 +343,7 @@ function ReportsTab({
     <div className="flex flex-col gap-5">
       {/* Info banner */}
       <div className="rounded-xl border border-border bg-surface px-4 py-3">
-        <p className="font-rethink text-sm italic text-text-secondary">
+        <p className="text-sm italic text-text-secondary">
           Community reports help you monitor counterfeit activity for your products. Review
           confirmed reports promptly to protect your customers.
         </p>
@@ -352,14 +352,14 @@ function ReportsTab({
       {/* Filter pills */}
       <div className="flex flex-wrap gap-4">
         <div className="flex flex-wrap gap-1.5">
-          <span className="self-center font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary">
+          <span className="self-center text-xs font-semibold uppercase tracking-wide text-text-secondary">
             Type
           </span>
           {REPORT_TYPES.map((t) => (
             <button
               key={t}
               onClick={() => onTypeFilter(t)}
-              className={`rounded-full px-3 py-1 font-rethink text-xs font-medium transition-colors ${
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 typeFilter === t
                   ? "bg-primary text-white"
                   : "border border-border text-text-secondary hover:border-primary/40 hover:text-text-primary"
@@ -370,14 +370,14 @@ function ReportsTab({
           ))}
         </div>
         <div className="flex flex-wrap gap-1.5">
-          <span className="self-center font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary">
+          <span className="self-center text-xs font-semibold uppercase tracking-wide text-text-secondary">
             Status
           </span>
           {REPORT_STATUSES.map((s) => (
             <button
               key={s}
               onClick={() => onStatusFilter(s)}
-              className={`rounded-full px-3 py-1 font-rethink text-xs font-medium capitalize transition-colors ${
+              className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
                 statusFilter === s
                   ? "bg-primary text-white"
                   : "border border-border text-text-secondary hover:border-primary/40 hover:text-text-primary"
@@ -390,13 +390,13 @@ function ReportsTab({
       </div>
 
       {/* Reports count */}
-      <p className="font-rethink text-sm text-text-secondary">
+      <p className="text-sm text-text-secondary">
         Showing {reports.length} of {allReports.length} report{allReports.length !== 1 ? "s" : ""}
       </p>
 
       {reports.length === 0 ? (
         <div className="rounded-2xl border border-border bg-surface py-14 text-center">
-          <p className="font-rethink text-sm text-text-secondary">
+          <p className="text-sm text-text-secondary">
             No reports match the selected filters
           </p>
         </div>
@@ -409,7 +409,7 @@ function ReportsTab({
                   {["Barcode", "Type", "Location", "Upvotes", "Date", "Status"].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary"
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary"
                     >
                       {h}
                     </th>
@@ -428,24 +428,24 @@ function ReportsTab({
                       {r.barcode}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="rounded-full border border-border px-2.5 py-0.5 font-rethink text-xs text-text-secondary">
+                      <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-text-secondary">
                         {REPORT_TYPE_LABELS[r.report_type] ?? r.report_type}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                    <td className="px-4 py-3 text-sm text-text-secondary">
                       {r.purchase_location}
                     </td>
-                    <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                    <td className="px-4 py-3 text-sm text-text-secondary">
                       {r.upvotes}
                     </td>
-                    <td className="px-4 py-3 font-rethink text-xs text-text-secondary">
+                    <td className="px-4 py-3 text-xs text-text-secondary">
                       {new Date(r.created_at).toLocaleDateString("en-GB", {
                         day: "numeric", month: "short", year: "numeric",
                       })}
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`rounded-full px-2.5 py-0.5 font-rethink text-xs font-medium capitalize ${STATUS_STYLES[r.status] ?? ""}`}
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[r.status] ?? ""}`}
                       >
                         {r.status}
                       </span>

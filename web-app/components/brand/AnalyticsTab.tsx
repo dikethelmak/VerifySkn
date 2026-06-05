@@ -42,10 +42,10 @@ export default function AnalyticsTab({
     <div className="flex flex-col gap-6">
       {/* ── Scan volume line chart ── */}
       <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-        <p className="mb-1 font-rethink text-sm font-semibold text-text-primary">
+        <p className="mb-1 text-sm font-semibold text-text-primary">
           Scan Volume — Last 30 Days
         </p>
-        <p className="mb-5 font-rethink text-xs text-text-secondary">
+        <p className="mb-5 text-xs text-text-secondary">
           {totalScans} total scan{totalScans !== 1 ? "s" : ""} across all your products
         </p>
         <ResponsiveContainer width="100%" height={200}>
@@ -89,11 +89,11 @@ export default function AnalyticsTab({
       <div className="grid gap-6 sm:grid-cols-2">
         {/* ── Result distribution pie ── */}
         <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-          <p className="mb-4 font-rethink text-sm font-semibold text-text-primary">
+          <p className="mb-4 text-sm font-semibold text-text-primary">
             Result Distribution
           </p>
           {totalScans === 0 ? (
-            <p className="py-8 text-center font-rethink text-sm text-text-secondary">
+            <p className="py-8 text-center text-sm text-text-secondary">
               No scan data yet
             </p>
           ) : (
@@ -135,11 +135,11 @@ export default function AnalyticsTab({
 
         {/* ── Most scanned products ── */}
         <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-          <p className="mb-4 font-rethink text-sm font-semibold text-text-primary">
+          <p className="mb-4 text-sm font-semibold text-text-primary">
             Most Scanned Products
           </p>
           {topProducts.length === 0 ? (
-            <p className="py-8 text-center font-rethink text-sm text-text-secondary">
+            <p className="py-8 text-center text-sm text-text-secondary">
               No scan data yet
             </p>
           ) : (
@@ -151,7 +151,7 @@ export default function AnalyticsTab({
                 return (
                   <li key={p.name} className="flex flex-col gap-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-rethink text-sm text-text-primary line-clamp-1">
+                      <span className="text-sm text-text-primary line-clamp-1">
                         <span className="mr-2 font-mono text-xs text-text-secondary">
                           {String(i + 1).padStart(2, "0")}
                         </span>

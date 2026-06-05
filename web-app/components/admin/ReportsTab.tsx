@@ -89,14 +89,14 @@ export default function ReportsTab({
         <h1 className="font-fraunces text-2xl font-semibold text-text-primary">
           Reports
         </h1>
-        <p className="mt-0.5 font-rethink text-sm text-text-secondary">
+        <p className="mt-0.5 text-sm text-text-secondary">
           {initialReports.length} total community report{initialReports.length !== 1 ? "s" : ""}
         </p>
       </div>
 
       {error && (
         <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "rgba(192,57,43,0.08)" }}>
-          <p className="font-rethink text-sm" style={{ color: "#C0392B" }}>{error}</p>
+          <p className="text-sm" style={{ color: "#C0392B" }}>{error}</p>
         </div>
       )}
 
@@ -111,7 +111,7 @@ export default function ReportsTab({
               key={s}
               onClick={() => setStatusFilter(s)}
               className={cn(
-                "rounded-full px-3.5 py-1.5 font-rethink text-xs font-medium capitalize transition-colors",
+                "rounded-full px-3.5 py-1.5 text-xs font-medium capitalize transition-colors",
                 statusFilter === s
                   ? "bg-primary text-white"
                   : "border border-border text-text-secondary hover:border-primary/40 hover:text-text-primary"
@@ -127,7 +127,7 @@ export default function ReportsTab({
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
         {filtered.length === 0 ? (
-          <p className="px-5 py-10 text-center font-rethink text-sm text-text-secondary">
+          <p className="px-5 py-10 text-center text-sm text-text-secondary">
             No reports with status &quot;{statusFilter}&quot;
           </p>
         ) : (
@@ -137,7 +137,7 @@ export default function ReportsTab({
                 {["", "Reporter", "Barcode", "Type", "Location", "Status", "Date", "Actions"].map((h) => (
                   <th
                     key={h}
-                    className="px-4 py-3 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary"
+                    className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-text-secondary"
                   >
                     {h}
                   </th>
@@ -178,19 +178,19 @@ export default function ReportsTab({
                       </td>
                       {/* Type */}
                       <td className="px-4 py-3">
-                        <span className="rounded-full border border-border px-2.5 py-0.5 font-rethink text-xs text-text-secondary">
+                        <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-text-secondary">
                           {TYPE_LABELS[r.report_type] ?? r.report_type}
                         </span>
                       </td>
                       {/* Location */}
-                      <td className="px-4 py-3 font-rethink text-sm text-text-secondary">
+                      <td className="px-4 py-3 text-sm text-text-secondary">
                         {r.purchase_location}
                       </td>
                       {/* Status */}
                       <td className="px-4 py-3">
                         <span
                           className={cn(
-                            "rounded-full px-2.5 py-0.5 font-rethink text-xs font-medium capitalize",
+                            "rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
                             STATUS_STYLES[r.status] ?? ""
                           )}
                         >
@@ -198,7 +198,7 @@ export default function ReportsTab({
                         </span>
                       </td>
                       {/* Date */}
-                      <td className="whitespace-nowrap px-4 py-3 font-rethink text-xs text-text-secondary">
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-text-secondary">
                         {new Date(r.created_at).toLocaleDateString("en-GB", {
                           day: "numeric", month: "short", year: "numeric",
                         })}
@@ -210,7 +210,7 @@ export default function ReportsTab({
                             <button
                               onClick={() => handleStatus(r.id, "confirmed")}
                               disabled={isPending}
-                              className="whitespace-nowrap rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-rethink text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50"
+                              className="whitespace-nowrap rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50"
                             >
                               Confirm
                             </button>
@@ -219,7 +219,7 @@ export default function ReportsTab({
                             <button
                               onClick={() => handleStatus(r.id, "dismissed")}
                               disabled={isPending}
-                              className="whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 font-rethink text-xs font-medium text-stone-600 transition-colors hover:bg-stone-100 disabled:opacity-50"
+                              className="whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-medium text-stone-600 transition-colors hover:bg-stone-100 disabled:opacity-50"
                             >
                               Dismiss
                             </button>
@@ -238,20 +238,20 @@ export default function ReportsTab({
                           <div className="flex flex-col gap-4">
                             {/* Description */}
                             <div>
-                              <p className="mb-1 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-secondary">
                                 Description
                               </p>
-                              <p className="font-rethink text-sm text-text-primary">
+                              <p className="text-sm text-text-primary">
                                 {r.description}
                               </p>
                             </div>
 
                             {/* Purchase country */}
                             <div>
-                              <p className="mb-1 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-secondary">
                                 Purchase Country
                               </p>
-                              <p className="font-rethink text-sm text-text-primary">
+                              <p className="text-sm text-text-primary">
                                 {r.purchase_country}
                               </p>
                             </div>
@@ -259,7 +259,7 @@ export default function ReportsTab({
                             {/* Images */}
                             {r.image_urls && r.image_urls.length > 0 && (
                               <div>
-                                <p className="mb-2 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">
                                   Images ({r.image_urls.length})
                                 </p>
                                 <div className="flex flex-wrap gap-2">
@@ -285,7 +285,7 @@ export default function ReportsTab({
 
                             {/* Admin notes */}
                             <div>
-                              <p className="mb-1.5 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">
                                 Admin Note
                               </p>
                               <textarea
@@ -298,12 +298,12 @@ export default function ReportsTab({
                                     [r.id]: e.target.value,
                                   }))
                                 }
-                                className="w-full max-w-lg resize-none rounded-xl border border-border bg-background px-4 py-2.5 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                className="w-full max-w-lg resize-none rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                               />
                               <button
                                 onClick={() => handleSaveNote(r)}
                                 disabled={isPending || savingNote === r.id}
-                                className="mt-2 flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 font-rethink text-xs font-medium text-text-secondary transition-colors hover:bg-background disabled:opacity-50"
+                                className="mt-2 flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-background disabled:opacity-50"
                               >
                                 {savingNote === r.id && (
                                   <Loader2 size={12} className="animate-spin" />

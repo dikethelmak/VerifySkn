@@ -16,13 +16,13 @@ export const typography = {
   subheading: "font-fraunces text-xl font-normal leading-snug text-text-primary",
 
   /** Standard body copy. Rethink Sans 16px regular. */
-  body: "font-rethink text-base font-normal leading-relaxed text-text-primary",
+  body: "text-base font-normal leading-relaxed text-text-primary",
 
   /** Small body copy. Rethink Sans 14px regular. */
-  bodySmall: "font-rethink text-sm font-normal leading-relaxed text-text-secondary",
+  bodySmall: "text-sm font-normal leading-relaxed text-text-secondary",
 
   /** All-caps label / tag. Rethink Sans 11px medium. */
-  label: "font-rethink text-xs font-medium uppercase tracking-widest text-text-secondary",
+  label: "text-xs font-medium uppercase tracking-widest text-text-secondary",
 
   /** Batch codes, barcodes, technical IDs. Space Mono 13px. */
   mono: "font-mono text-sm tracking-wide text-text-primary",

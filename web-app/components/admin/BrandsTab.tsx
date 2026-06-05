@@ -73,13 +73,13 @@ export default function BrandsTab({
           <h1 className="font-fraunces text-2xl font-semibold text-text-primary">
             Brands
           </h1>
-          <p className="mt-0.5 font-rethink text-sm text-text-secondary">
+          <p className="mt-0.5 text-sm text-text-secondary">
             {initialBrands.length} brand{initialBrands.length !== 1 ? "s" : ""} registered
           </p>
         </div>
         <button
           onClick={() => setShowAdd((v) => !v)}
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-rethink text-sm font-medium text-white hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
         >
           <Plus size={15} />
           Add Brand
@@ -91,7 +91,7 @@ export default function BrandsTab({
           className="rounded-xl px-4 py-3"
           style={{ backgroundColor: "rgba(192,57,43,0.08)" }}
         >
-          <p className="font-rethink text-sm" style={{ color: "#C0392B" }}>
+          <p className="text-sm" style={{ color: "#C0392B" }}>
             {error}
           </p>
         </div>
@@ -100,12 +100,12 @@ export default function BrandsTab({
       {/* Add brand form */}
       {showAdd && (
         <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
-          <p className="mb-4 font-rethink text-sm font-semibold text-text-primary">
+          <p className="mb-4 text-sm font-semibold text-text-primary">
             New Brand
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="flex flex-col gap-1">
-              <label className="font-rethink text-xs font-medium text-text-secondary">
+              <label className="text-xs font-medium text-text-secondary">
                 Brand Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -113,11 +113,11 @@ export default function BrandsTab({
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="e.g. CeraVe"
-                className="rounded-xl border border-border bg-background px-3 py-2 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="font-rethink text-xs font-medium text-text-secondary">
+              <label className="text-xs font-medium text-text-secondary">
                 Website
               </label>
               <input
@@ -125,11 +125,11 @@ export default function BrandsTab({
                 value={newWebsite}
                 onChange={(e) => setNewWebsite(e.target.value)}
                 placeholder="https://cerave.com"
-                className="rounded-xl border border-border bg-background px-3 py-2 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="font-rethink text-xs font-medium text-text-secondary">
+              <label className="text-xs font-medium text-text-secondary">
                 Logo URL
               </label>
               <input
@@ -137,7 +137,7 @@ export default function BrandsTab({
                 value={newLogo}
                 onChange={(e) => setNewLogo(e.target.value)}
                 placeholder="https://…/logo.png"
-                className="rounded-xl border border-border bg-background px-3 py-2 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
           </div>
@@ -145,14 +145,14 @@ export default function BrandsTab({
             <button
               onClick={handleAddBrand}
               disabled={!newName.trim() || adding || isPending}
-              className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-rethink text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               {adding && <Loader2 size={13} className="animate-spin" />}
               Create Brand
             </button>
             <button
               onClick={() => setShowAdd(false)}
-              className="rounded-xl border border-border px-4 py-2 font-rethink text-sm font-medium text-text-secondary hover:bg-background transition-colors"
+              className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-background transition-colors"
             >
               Cancel
             </button>
@@ -163,7 +163,7 @@ export default function BrandsTab({
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
         {initialBrands.length === 0 ? (
-          <p className="px-5 py-10 text-center font-rethink text-sm text-text-secondary">
+          <p className="px-5 py-10 text-center text-sm text-text-secondary">
             No brands yet
           </p>
         ) : (
@@ -173,7 +173,7 @@ export default function BrandsTab({
                 {["Brand", "Website", "Products", "Verified", ""].map((h) => (
                   <th
                     key={h}
-                    className="px-4 py-3 font-rethink text-xs font-semibold uppercase tracking-wide text-text-secondary"
+                    className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-text-secondary"
                   >
                     {h}
                   </th>
@@ -208,7 +208,7 @@ export default function BrandsTab({
                             {brand.name.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <span className="font-rethink text-sm font-medium text-text-primary">
+                        <span className="text-sm font-medium text-text-primary">
                           {brand.name}
                         </span>
                       </div>
@@ -220,18 +220,18 @@ export default function BrandsTab({
                           href={brand.website}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-1 font-rethink text-xs text-primary hover:underline"
+                          className="flex items-center gap-1 text-xs text-primary hover:underline"
                         >
                           <ExternalLink size={11} />
                           {brand.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
                         </a>
                       ) : (
-                        <span className="font-rethink text-xs text-text-secondary">—</span>
+                        <span className="text-xs text-text-secondary">—</span>
                       )}
                     </td>
                     {/* Products */}
                     <td className="px-4 py-3">
-                      <span className="rounded-full border border-border px-2.5 py-0.5 font-rethink text-xs text-text-secondary">
+                      <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-text-secondary">
                         {count} product{count !== 1 ? "s" : ""}
                       </span>
                     </td>
@@ -257,7 +257,7 @@ export default function BrandsTab({
                     <td className="px-4 py-3">
                       <span
                         className={cn(
-                          "rounded-full px-2.5 py-0.5 font-rethink text-xs font-medium",
+                          "rounded-full px-2.5 py-0.5 text-xs font-medium",
                           brand.verified
                             ? "bg-emerald-100 text-emerald-700"
                             : "bg-stone-100 text-stone-500"

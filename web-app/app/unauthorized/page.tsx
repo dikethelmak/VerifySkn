@@ -40,7 +40,7 @@ export default function UnauthorizedPage() {
       <h1 className="mt-6 font-fraunces text-3xl font-semibold text-text-primary">
         Access Denied
       </h1>
-      <p className="mt-2 max-w-sm font-rethink text-sm text-text-secondary">
+      <p className="mt-2 max-w-sm text-sm text-text-secondary">
         You don&apos;t have permission to view this page. If you believe this is
         an error, please contact support.
       </p>
@@ -48,13 +48,13 @@ export default function UnauthorizedPage() {
       <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
         <Link
           href="/dashboard"
-          className="rounded-xl bg-primary px-8 py-3 font-rethink text-sm font-medium text-white transition-colors hover:bg-primary/90"
+          className="rounded-xl bg-primary px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-primary/90"
         >
           Go to Dashboard
         </Link>
         <Link
           href="/"
-          className="rounded-xl border border-border px-8 py-3 font-rethink text-sm font-medium text-text-secondary transition-colors hover:bg-background"
+          className="rounded-xl border border-border px-8 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-background"
         >
           Home
         </Link>

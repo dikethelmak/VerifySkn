@@ -189,14 +189,14 @@ export default async function BrandPage() {
               </h1>
               {brand.verified && (
                 <span
-                  className="rounded-full px-3 py-0.5 font-rethink text-xs font-semibold"
+                  className="rounded-full px-3 py-0.5 text-xs font-semibold"
                   style={{ backgroundColor: "rgba(201,168,76,0.15)", color: "#B8922C" }}
                 >
                   Verified Brand Partner
                 </span>
               )}
             </div>
-            <p className="mt-1 font-rethink text-sm text-text-secondary">
+            <p className="mt-1 text-sm text-text-secondary">
               Welcome back{profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}
             </p>
           </div>

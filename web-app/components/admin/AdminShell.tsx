@@ -84,7 +84,7 @@ export default function AdminShell({
           <span className="hidden lg:block font-fraunces text-[18px] font-semibold text-white leading-tight">
             VerifySkn
             <br />
-            <span className="text-[11px] font-rethink font-normal text-white/50 tracking-widest uppercase">
+            <span className="text-[11px] font-normal text-white/50 tracking-widest uppercase">
               Admin
             </span>
           </span>
@@ -100,7 +100,7 @@ export default function AdminShell({
                 onClick={() => setActiveTab(label)}
                 title={label}
                 className={cn(
-                  "flex w-full items-center gap-3 border-l-4 px-4 py-2.5 font-rethink text-sm font-medium transition-colors",
+                  "flex w-full items-center gap-3 border-l-4 px-4 py-2.5 text-sm font-medium transition-colors",
                   isActive
                     ? "border-[#C9A84C] bg-white text-[#1A3C2E]"
                     : "border-transparent text-white/65 hover:bg-white/10 hover:text-white"
@@ -159,7 +159,7 @@ export default function AdminShell({
               />
               <span
                 className={cn(
-                  "font-rethink text-[9px] font-medium transition-colors",
+                  "text-[9px] font-medium transition-colors",
                   isActive ? "text-white" : "text-white/40"
                 )}
               >

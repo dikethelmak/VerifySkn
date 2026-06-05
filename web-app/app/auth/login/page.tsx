@@ -30,7 +30,7 @@ function Field({
     <div>
       <label
         htmlFor={id}
-        className="mb-1.5 block font-rethink text-sm font-medium text-text-primary"
+        className="mb-1.5 block text-sm font-medium text-text-primary"
       >
         {label}
       </label>
@@ -41,11 +41,11 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-border bg-background px-4 py-2.5 font-rethink text-sm text-text-primary placeholder:text-text-secondary/60 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
         style={error ? { borderColor: "#C0392B" } : {}}
       />
       {error && (
-        <p className="mt-1 font-rethink text-[13px]" style={{ color: "#C0392B" }}>
+        <p className="mt-1 text-[13px]" style={{ color: "#C0392B" }}>
           {error}
         </p>
       )}
@@ -164,7 +164,7 @@ export default function LoginPage() {
           </span>
         </Link>
 
-        <p className="mb-6 text-center font-rethink text-sm text-text-secondary">
+        <p className="mb-6 text-center text-sm text-text-secondary">
           Sign in to your account
         </p>
 
@@ -174,7 +174,7 @@ export default function LoginPage() {
             className="mb-5 rounded-xl px-4 py-3"
             style={{ backgroundColor: "rgba(192,57,43,0.07)" }}
           >
-            <p className="font-rethink text-[13px]" style={{ color: "#C0392B" }}>
+            <p className="text-[13px]" style={{ color: "#C0392B" }}>
               {errors.general}
             </p>
           </div>
@@ -206,7 +206,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3 font-rethink text-base font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98] disabled:opacity-60"
+            className="mt-1 flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary/90 active:scale-[0.98] disabled:opacity-60"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
@@ -215,7 +215,7 @@ export default function LoginPage() {
         {/* Divider */}
         <div className="relative my-5 flex items-center gap-3">
           <div className="h-px flex-1 bg-border" />
-          <span className="font-rethink text-xs text-text-secondary">or</span>
+          <span className="text-xs text-text-secondary">or</span>
           <div className="h-px flex-1 bg-border" />
         </div>
 
@@ -224,14 +224,14 @@ export default function LoginPage() {
           type="button"
           onClick={handleGoogle}
           disabled={googleLoading}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-surface px-6 py-2.5 font-rethink text-sm font-medium text-text-primary transition-colors hover:bg-background active:scale-[0.98] disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-surface px-6 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-background active:scale-[0.98] disabled:opacity-60"
         >
           <GoogleIcon />
           {googleLoading ? "Redirecting…" : "Sign in with Google"}
         </button>
 
         {/* Sign up link */}
-        <p className="mt-7 text-center font-rethink text-sm text-text-secondary">
+        <p className="mt-7 text-center text-sm text-text-secondary">
           Don&apos;t have an account?{" "}
           <Link
             href="/auth/signup"
