@@ -1,15 +1,8 @@
 import type { Metadata } from "next";
-import { Fraunces, Rethink_Sans, Space_Mono, Syne, DM_Mono } from "next/font/google";
+import { Fraunces, Space_Mono, Syne, DM_Mono } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import { PageTransition } from "@/components/PageTransition";
 import "./globals.css";
-
-const rethinkSans = Rethink_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-rethink",
-  display: "swap",
-});
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -28,7 +21,7 @@ const spaceMono = Space_Mono({
 // Used on the home page dark theme (both are Google Fonts)
 const syne = Syne({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-syne",
   display: "swap",
 });
@@ -70,9 +63,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${rethinkSans.variable} ${fraunces.variable} ${spaceMono.variable} ${syne.variable} ${dmMono.variable}`}
+      className={`${fraunces.variable} ${spaceMono.variable} ${syne.variable} ${dmMono.variable}`}
     >
-      <body className="min-h-screen bg-background font-rethink text-text-primary antialiased">
+      <body className="min-h-screen bg-background font-syne text-text-primary antialiased">
         <Navbar />
         {/* pt-14 offsets the fixed 56px navbar */}
         <div className="pt-14">

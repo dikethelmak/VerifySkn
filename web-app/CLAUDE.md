@@ -146,18 +146,16 @@ Run migrations in order via Supabase Dashboard → SQL Editor:
 
 ## Design System
 
-Five Google fonts loaded as CSS variables in `app/layout.tsx`:
-- `font-rethink` (`--font-rethink`) — Rethink Sans. Default body font. **Never set explicitly** — it applies via the `<body>` class. Remove it if you see it on paragraphs.
+Four Google fonts loaded as CSS variables in `app/layout.tsx`:
+- `font-syne` (`--font-syne`) — **Default body font and all headings.** Applied via the `<body>` class. Never set explicitly on individual elements — it already applies everywhere.
 - `font-fraunces` (`--font-fraunces`) — Fraunces. Not currently used — do not add.
 - `font-mono` (`--font-mono`) — Space Mono. Labels, barcodes, confidence scores, technical values (eyebrow text, `uppercase tracking-widest` patterns).
-- `font-syne` (`--font-syne`) — **Headings on all pages** (`h1`, `h2`, `h3`) and the home page dark theme UI (HomeClient).
 - `font-dm-mono` (`--font-dm-mono`) — Home page dark theme mono (HomeClient). Do not use on any other page.
 
 ### Typography rules — follow exactly, no exceptions
-- `h1`, `h2`, `h3` → `font-syne`
-- Body paragraphs, descriptions, UI text → no font class (defaults to `font-rethink`)
+- All text → no font class (defaults to `font-syne` via `<body>`)
 - Eyebrow labels, scores, barcodes, mono values → `font-mono`
-- HomeClient / dark theme UI → `font-syne` + `font-dm-mono` only
+- HomeClient / dark theme UI → `font-dm-mono` for mono elements only
 - **Never use `replace_all` on font class names across a whole file.** Make surgical per-element edits.
 
 Tailwind colour tokens (`tailwind.config.ts`): `background` (#0b1e0f), `surface` (#0f2614), `primary` (#1A3C2E), `accent` (#C9A84C), `lime` / `success` (#7dc98a), `warning` (#E07B2A), `danger` (#C0392B), `text-primary` (#eeecea), `text-secondary` (rgba(238,236,234,0.5)), `border` (rgba(255,255,255,0.09)).
