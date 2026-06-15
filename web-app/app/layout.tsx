@@ -1,15 +1,8 @@
 import type { Metadata } from "next";
-import { Fraunces, Space_Mono, Syne, DM_Mono } from "next/font/google";
+import { Space_Mono, Syne, DM_Mono } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import { PageTransition } from "@/components/PageTransition";
 import "./globals.css";
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  variable: "--font-fraunces",
-  display: "swap",
-});
 
 const spaceMono = Space_Mono({
   subsets: ["latin"],
@@ -63,7 +56,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${spaceMono.variable} ${syne.variable} ${dmMono.variable}`}
+      className={`${spaceMono.variable} ${syne.variable} ${dmMono.variable}`}
     >
       <body className="min-h-screen bg-background font-syne text-text-primary antialiased">
         <Navbar />
