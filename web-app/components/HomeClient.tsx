@@ -300,6 +300,7 @@ export function HomeClient() {
   const [serialImgPhase,  setSerialImgPhase]  = useState<"idle" | "analyzing" | "result" | "error">("idle");
   const [serialImgResult, setSerialImgResult] = useState<DeepResult | null>(null);
   const [serialImgError,  setSerialImgError]  = useState<string | null>(null);
+  const [serialImage,     setSerialImage]     = useState<ReportImage | null>(null);
 
   // Product details accordion
   const [showDetails, setShowDetails] = useState(false);
@@ -405,6 +406,7 @@ export function HomeClient() {
   const handleSerialImageReady = useCallback(async (base64: string, mimeType: string) => {
     setSerialImgPhase("analyzing");
     setSerialImgError(null);
+    setSerialImage({ preview: `data:${mimeType};base64,${base64}`, base64, mimeType, name: "packaging.jpg" });
     try {
       const res = await fetch("/api/analyse-product", {
         method:  "POST",
@@ -1029,7 +1031,13 @@ export function HomeClient() {
                   {/* Actions */}
                   <div className="flex flex-wrap items-center gap-3">
                     <button
-                      onClick={() => { setReportPrefill({ issues: [], desc: "", images: [] }); setShowReport(true); }}
+                      onClick={() => {
+                        const issues: ReportIssue[] = result?.source === "open_beauty_facts" ? ["wrong_info"] : [];
+                        const flags = serialImgResult?.flags.length ? `Flags:\n${serialImgResult.flags.map(f => `• ${mapFlagLabel(f)}`).join("\n")}` : "";
+                        const desc = [serialImgResult?.summary, flags].filter(Boolean).join("\n\n");
+                        setReportPrefill({ issues, desc, images: serialImage ? [serialImage] : [] });
+                        setShowReport(true);
+                      }}
                       className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
                       style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}`, color: C.red, cursor: "pointer", fontFamily: UI }}
                     >

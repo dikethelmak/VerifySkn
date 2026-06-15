@@ -43,6 +43,8 @@ function getClientIp(request: NextRequest): string {
 // ── Origin validation ─────────────────────────────────────────
 
 const ALLOWED_ORIGINS = new Set([
+  'https://verifyskn.com',
+  'https://www.verifyskn.com',
   process.env.NEXT_PUBLIC_SITE_URL,
   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
   'http://localhost:3000',
