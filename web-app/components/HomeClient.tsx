@@ -722,6 +722,15 @@ export function HomeClient() {
                   <p className="text-sm leading-relaxed" style={{ color: C.w40, maxWidth: "320px" }}>
                     We could not find this product in our database or any known source. It may be counterfeit or unregistered.
                   </p>
+                  <a
+                    href="https://calendar.app.google/sLinchWrpXCdTcPt6"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="self-start rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                    style={{ background: "#C9A84C", color: C.forestDeep, fontFamily: UI }}
+                  >
+                    Book a consultation
+                  </a>
                   <button
                     type="button"
                     onClick={() => setShowReport(true)}
