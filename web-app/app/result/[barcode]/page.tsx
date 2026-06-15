@@ -19,13 +19,22 @@ const VERDICT_STYLE: Record<ScanVerdict, { card: string; text: string }> = {
   suspicious: { card: "rgba(192,57,43,0.1)",  text: "#C0392B" },
 };
 
+const BOOKING_URL = "https://calendar.app.google/sLinchWrpXCdTcPt6";
+
 type Row = {
   id: string;
   barcode_scanned: string;
   result: ScanVerdict;
   confidence_score: number;
   scanned_at: string;
-  product: { name: string; brand: string; category: string } | null;
+  product: {
+    name: string;
+    brand: string;
+    category: string;
+    how_to_use: string | null;
+    skin_type_suitability: string | null;
+    key_ingredients: string[] | null;
+  } | null;
 };
 
 export default async function ResultPage({ params }: PageProps) {
@@ -34,7 +43,7 @@ export default async function ResultPage({ params }: PageProps) {
 
   const { data } = await supabase
     .from("scan_logs")
-    .select("id, barcode_scanned, result, confidence_score, scanned_at, product:products(name, brand, category)")
+    .select("id, barcode_scanned, result, confidence_score, scanned_at, product:products(name, brand, category, how_to_use, skin_type_suitability, key_ingredients)")
     .eq("barcode_scanned", barcode)
     .order("scanned_at", { ascending: false })
     .limit(1)
@@ -108,6 +117,63 @@ export default async function ResultPage({ params }: PageProps) {
           <span className="font-mono text-xs text-text-primary">{scannedAt}</span>
         </div>
       </div>
+
+      {/* Product usage */}
+      {row.product && (row.product.skin_type_suitability || row.product.how_to_use || row.product.key_ingredients?.length) && (
+        <div className="rounded-xl border border-border bg-surface px-4 py-4 space-y-4">
+          <p className="font-mono text-xs uppercase tracking-widest text-text-secondary">How to use</p>
+
+          {row.product.skin_type_suitability && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-text-secondary">Best for</p>
+              <div className="flex flex-wrap gap-2">
+                {row.product.skin_type_suitability.split(",").map((s) => (
+                  <span
+                    key={s}
+                    className="rounded-full border border-border px-3 py-1 text-xs text-text-primary"
+                  >
+                    {s.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {row.product.how_to_use && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-text-secondary">Usage</p>
+              <p className="text-sm leading-relaxed text-text-primary">{row.product.how_to_use}</p>
+            </div>
+          )}
+
+          {row.product.key_ingredients && row.product.key_ingredients.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-text-secondary">Key ingredients</p>
+              <div className="flex flex-wrap gap-2">
+                {row.product.key_ingredients.map((ing) => (
+                  <span
+                    key={ing}
+                    className="rounded-full bg-primary px-3 py-1 text-xs text-text-primary"
+                  >
+                    {ing}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Consultation */}
+      <Link
+        href={BOOKING_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full rounded-xl py-3 text-center text-sm font-semibold transition-colors"
+        style={{ background: "#C9A84C", color: "#0b1e0f" }}
+      >
+        Book a consultation
+      </Link>
 
       {/* Actions */}
       <div className="flex gap-3">

@@ -1199,6 +1199,15 @@ export function HomeClient() {
                 >
                   Download report
                 </button>
+                <a
+                  href="https://calendar.app.google/sLinchWrpXCdTcPt6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                  style={{ background: "#C9A84C", color: C.forestDeep, fontFamily: UI }}
+                >
+                  Book a consultation
+                </a>
                 <button
                   onClick={() => {
                     const issues: ReportIssue[] = deepResult.result === "suspicious" ? ["counterfeit"] : deepResult.result === "unverified" ? ["wrong_info"] : [];
