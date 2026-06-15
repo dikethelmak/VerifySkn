@@ -91,19 +91,24 @@ export function ReportForm({
     setSubmitting(true);
     setError(null);
 
-    const res = await fetch("/api/report", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ barcode: barcode.trim(), images, issues, description: description.trim() }),
-    });
-    setSubmitting(false);
+    try {
+      const res = await fetch("/api/report", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ barcode: barcode.trim(), images, issues, description: description.trim() }),
+      });
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Failed to submit — please try again.");
-      return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to submit — please try again.");
+        return;
+      }
+      setSuccess(true);
+    } catch {
+      setError("Failed to submit — please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    setSuccess(true);
   }
 
   if (success) {
