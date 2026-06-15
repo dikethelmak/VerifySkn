@@ -1191,39 +1191,44 @@ export function HomeClient() {
               )}
 
               {/* Actions */}
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => downloadDeepReport(deepResult)}
-                  className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
-                  style={{ background: C.lime, color: C.forestDeep, border: "none", cursor: "pointer", fontFamily: UI }}
-                >
-                  Download report
-                </button>
+              <div className="flex flex-col gap-3">
+                {/* Primary CTA */}
                 <a
                   href="https://calendar.app.google/sLinchWrpXCdTcPt6"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                  className="w-full rounded-lg py-3 text-center text-sm font-semibold transition-opacity hover:opacity-90"
                   style={{ background: "#C9A84C", color: C.forestDeep, fontFamily: UI }}
                 >
                   Book a consultation
                 </a>
-                <button
-                  onClick={() => {
-                    const issues: ReportIssue[] = deepResult.result === "suspicious" ? ["counterfeit"] : deepResult.result === "unverified" ? ["wrong_info"] : [];
-                    const flags = deepResult.flags.length > 0 ? `Flags:\n${deepResult.flags.map(f => `• ${mapFlagLabel(f)}`).join("\n")}` : "";
-                    const desc = [deepResult.summary, flags].filter(Boolean).join("\n\n");
-                    setReportPrefill({ issues, desc, images: deepImage ? [deepImage] : [] });
-                    setShowReport(true);
-                  }}
-                  className="rounded-lg px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
-                  style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}`, color: C.red, cursor: "pointer", fontFamily: UI }}
-                >
-                  Report product
-                </button>
+                {/* Secondary actions */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => downloadDeepReport(deepResult)}
+                    className="flex-1 rounded-lg py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                    style={{ background: "transparent", color: C.lime, border: `1px solid ${C.limeBorder}`, cursor: "pointer", fontFamily: UI }}
+                  >
+                    Download report
+                  </button>
+                  <button
+                    onClick={() => {
+                      const issues: ReportIssue[] = deepResult.result === "suspicious" ? ["counterfeit"] : deepResult.result === "unverified" ? ["wrong_info"] : [];
+                      const flags = deepResult.flags.length > 0 ? `Flags:\n${deepResult.flags.map(f => `• ${mapFlagLabel(f)}`).join("\n")}` : "";
+                      const desc = [deepResult.summary, flags].filter(Boolean).join("\n\n");
+                      setReportPrefill({ issues, desc, images: deepImage ? [deepImage] : [] });
+                      setShowReport(true);
+                    }}
+                    className="flex-1 rounded-lg py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
+                    style={{ background: C.redBg, border: `0.5px solid ${C.redBorder}`, color: C.red, cursor: "pointer", fontFamily: UI }}
+                  >
+                    Report product
+                  </button>
+                </div>
+                {/* Exit */}
                 <button
                   onClick={() => { setDeepResult(null); setDeepPhase("idle"); setDeepImage(null); }}
-                  className="text-sm transition-opacity hover:opacity-70"
+                  className="w-full text-center text-sm transition-opacity hover:opacity-70"
                   style={{ background: "none", border: "none", cursor: "pointer", color: C.w25, fontFamily: UI }}
                 >
                   Clear result

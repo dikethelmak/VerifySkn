@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import { verdictLabel, confidenceTier } from "@/lib/verdictUtils";
 import type { ScanVerdict } from "@/lib/database.types";
+import { generateProductUsage, type ProductUsage } from "@/lib/product-usage";
 
 interface PageProps {
   params: { barcode: string };
@@ -51,6 +52,16 @@ export default async function ResultPage({ params }: PageProps) {
 
   const row = data as Row | null;
 
+  // Generate usage info if the product exists but is missing it
+  let generatedUsage: ProductUsage | null = null
+  if (row?.product && !row.product.how_to_use && !row.product.skin_type_suitability) {
+    generatedUsage = await generateProductUsage(
+      row.product.name,
+      row.product.brand,
+      row.product.category,
+    )
+  }
+
   if (!row) {
     return (
       <main className="mx-auto max-w-lg px-4 py-12 space-y-4">
@@ -75,6 +86,11 @@ export default async function ResultPage({ params }: PageProps) {
   const scannedAt = new Date(row.scanned_at).toLocaleDateString("en-GB", {
     day: "numeric", month: "long", year: "numeric",
   });
+
+  const usageSuitability = row.product?.skin_type_suitability ?? generatedUsage?.skin_type_suitability ?? null;
+  const usageHowToUse    = row.product?.how_to_use            ?? generatedUsage?.how_to_use            ?? null;
+  const usageIngredients = row.product?.key_ingredients       ?? generatedUsage?.key_ingredients       ?? null;
+  const hasUsage = !!(usageSuitability || usageHowToUse || usageIngredients?.length);
 
   return (
     <main className="mx-auto max-w-lg px-4 py-12 space-y-6">
@@ -119,15 +135,15 @@ export default async function ResultPage({ params }: PageProps) {
       </div>
 
       {/* Product usage */}
-      {row.product && (row.product.skin_type_suitability || row.product.how_to_use || row.product.key_ingredients?.length) && (
+      {hasUsage && (
         <div className="rounded-xl border border-border bg-surface px-4 py-4 space-y-4">
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary">How to use</p>
 
-          {row.product.skin_type_suitability && (
+          {usageSuitability && (
             <div className="space-y-1.5">
               <p className="text-xs text-text-secondary">Best for</p>
               <div className="flex flex-wrap gap-2">
-                {row.product.skin_type_suitability.split(",").map((s) => (
+                {usageSuitability.split(",").map((s) => (
                   <span
                     key={s}
                     className="rounded-full border border-border px-3 py-1 text-xs text-text-primary"
@@ -139,18 +155,18 @@ export default async function ResultPage({ params }: PageProps) {
             </div>
           )}
 
-          {row.product.how_to_use && (
+          {usageHowToUse && (
             <div className="space-y-1.5">
               <p className="text-xs text-text-secondary">Usage</p>
-              <p className="text-sm leading-relaxed text-text-primary">{row.product.how_to_use}</p>
+              <p className="text-sm leading-relaxed text-text-primary">{usageHowToUse}</p>
             </div>
           )}
 
-          {row.product.key_ingredients && row.product.key_ingredients.length > 0 && (
+          {usageIngredients && usageIngredients.length > 0 && (
             <div className="space-y-1.5">
               <p className="text-xs text-text-secondary">Key ingredients</p>
               <div className="flex flex-wrap gap-2">
-                {row.product.key_ingredients.map((ing) => (
+                {usageIngredients.map((ing) => (
                   <span
                     key={ing}
                     className="rounded-full bg-primary px-3 py-1 text-xs text-text-primary"
